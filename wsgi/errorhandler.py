@@ -2,6 +2,7 @@ __author__="pborky"
 __date__ ="$22.2.2010 0:52:47$"
 
 import linecache
+from types import TracebackType
 
 class ErrHandle:
 
@@ -54,7 +55,7 @@ class ErrHandle:
                         and len(i) == 3
                         and issubclass(i[0], Exception)
                         and issubclass(i[1].__class__, Exception)
-                        and i[2].__class__.__name__ == 'traceback'):
+                        and isinstance(i[2], TracebackType)):
                     list.append('<p><code><b>%s</b></code>`s root cause:</p>' % exc_type)
                     list.extend(ErrHandle.format_tb(i, lines))
 
