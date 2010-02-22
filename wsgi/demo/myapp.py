@@ -11,28 +11,16 @@ class MyApp(object):
         req = context.request
 
         res.status = 200
+        res.header.append(('Content-Type', 'text/html'))
 
         self.counter += 1
+        
         res.body.append('<p>Request number: %s </p>' % self.counter)
+        res.body.append('<p>Request content: %s </p>' % req.content)
+        res.body.append('<h1>The environ contains: </h1><table>')
 
-        if (False):#len(req.content) == 0):
-            res.body.append("""<FORM method="post">
-                <P>
-                Name: <INPUT type="text" name="name"></br>
-                Last: <INPUT type="text" name="last"></br>
-                <INPUT type="radio" name="sex" value="Male"> Male</br>
-                <INPUT type="radio" name="sex" value="Female"> Female</br>
-                <INPUT type="submit" value="Send"></P>
-                </FORM>""")
+        for i in req.environ.items():
+            res.body.append('<tr><td><b>%s</td><td>%s</td></tr>' % i)
 
-        else:
-            res.body.append('<p>Request content: %s </p>' % req.content)
-            res.body.append('<h1>The environ contains: </h1><table>')
+        res.body.append('</table>')
 
-            for i in req.environ.items():
-                res.body.append('<tr><td><b>%s</td><td>%s</td></tr>' % i)
-
-            res.body.append('</table>')
-
-        res.header.append(('Content-Type', 'text/html'))
-        res.header.append(('Content-Length', str(res.contentLength)))

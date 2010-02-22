@@ -57,6 +57,7 @@ class Response:
     def return_response(self):
         if (self.status == 0):
             raise Exception('HTTP status is unset')
+        self.header.append(('Content-Length', str(res.contentLength)))
         self._start_response(self.get_status_string(), self.header)
         return self.body
 
