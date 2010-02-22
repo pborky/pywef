@@ -13,11 +13,12 @@ class MyException(Exception):
 class MyApp(object):
     def __call__(self, context):
         try:
-            #raise MyException('Hello world! This is an example exception.')
+            raise MyException('Hello world! This is an example exception.')
             context.response.status = 200
             context.response.header.append(('Content-Type', 'text/plain'))
-            context.response.body.append('Hello world!\nHere be dragon soon.')
+            context.response.body.append('Hello world!')
         except:
             raise Exception('Oh! Somethig gone wrong.', sys.exc_info())
+
 
 application = FrontControllerFactory.produce(MyApp())

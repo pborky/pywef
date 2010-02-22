@@ -5,7 +5,7 @@ import cStringIO
 import copy
 
 class Request:
-    """ TODO: parse the environ and prive own properties """
+    """ TODO: parse the environ and provide high level properties """
 
     def __init__(self, environ):
         """ Initiate Request object """
@@ -93,19 +93,11 @@ class Response:
         self._start_response(self.statusString, self.header)
         return self.body
 
-class Session:
-    pass
-
 class Context:
 
-    def __init__(self, session, request, response):
-        self._session = session
+    def __init__(self, request, response):
         self._request = request
         self._response = response
-
-    @property
-    def session(self):
-        return self._session
 
     @property
     def request(self):

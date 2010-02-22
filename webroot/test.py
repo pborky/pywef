@@ -3,11 +3,14 @@ __date__ ="$19.2.2010 2:46:04$"
 
 import cStringIO
 import os
+from wsgi.monitor import Monitor
+
+Monitor().start()
 
 def application(environ, start_response):
     headers = []
     headers.append(('Content-Type', 'text/plain'))
-    write = start_response('200 OK', headers)
+    start_response('200 OK', headers)
 
     input = environ['wsgi.input']
     output = cStringIO.StringIO()
