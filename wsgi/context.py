@@ -17,7 +17,8 @@ class Request:
         self.environ['wsgi.input'] = None
         
     def __setattr__(self, name, val):
-        if name in ('environ', 'content'): raise Exception('Attribute %s is read only.' % name)
+        if name in ('environ', 'content'): 
+            raise Exception('Attribute %s is read only.' % name)
         self.__dict__[name] = val
 
 class Response:
@@ -40,7 +41,7 @@ class Response:
     def __setattr__(self, name, val):
         if name in ('header', 'body'):
             raise Exception('Attribute %s is read only.' % name)
-        if (name in ('status')) and (not value in Response._STATUS_LIST):
+        if (name in ('status')) and (not val in Response._STATUS_LIST):
             raise Exception('HTTP status %s is not defined' % value)
         self.__dict__[name] = val
 
