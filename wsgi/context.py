@@ -9,17 +9,15 @@ class Request:
 
     def __init__(self, environ):
         """ Initiate Request object """
-        self.environ = environ
+        self.__dict__['environ'] = environ
         lines = []
-        for line in environ['wsgi.input']:
-            lines.append(line)
+        for line in environ['wsgi.input']: lines.append(line)
         newlines = copy.copy(lines)
-        self.content = newlines #cStringIO.StringIO(''.join(newlines))
-        environ['wsgi.input'] = None
+        self.__dict__['content'] = newlines
+        self.environ['wsgi.input'] = None
         
     def __setattr__(self, name, val):
-        if name in ('environ', 'content'):
-            raise Exception('Attribute %s is read only.' % name)
+        if name in ('environ', 'content'): raise Exception('Attribute %s is read only.' % name)
         self.__dict__[name] = val
 
 class Response:
@@ -31,20 +29,17 @@ class Response:
                         500:'500 Internal Server Error'
                    }
 
-    def __init__(self, start_response, status=0, header=None, body=None):
-        
+    def __init__(self, start_response, status=0, header=None, body=None):        
         self._start_response = start_response        
-        self.status = status        
-        if (header==None):
-            self.header = []
-        else:
-            self.header = [].extend(header)
-        if (body==None):
-            self.body = []
-        else:
-            self.body = [].extend(body)
+        self.status = status
+        self.__dict__['header'] = []
+        self.__dict__['body'] = []        
+        if (header!=None): self.header.extend(header)
+        if (body!=None): self.body.extend(body)
 
     def __setattr__(self, name, val):
+        if name in ('header', 'body'):
+            raise Exception('Attribute %s is read only.' % name)
         if (name in ('status')) and (not value in Response._STATUS_LIST):
             raise Exception('HTTP status %s is not defined' % value)
         self.__dict__[name] = val
@@ -75,5 +70,5 @@ class Context:
     def __setattr__(self,name, val):
         if name in ('request', 'response'):
             raise Exception('Attribute %s is read only.' % name)
-        self.__dict__[name] = val    
+        self.__dict__[name] = val
             
