@@ -70,3 +70,4 @@ except:
     # TODO: this should be diferent - think about
     FrontControllerFactory._init_exc_info = sys.exc_info()
     FrontControllerFactory._worker_cls = None
+
