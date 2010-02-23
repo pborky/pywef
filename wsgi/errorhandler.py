@@ -10,22 +10,14 @@ class ErrHandle:
     def format_exc(exc_info, lines = True):
 
         ret_iterable = []
-        ret_iterable.extend(['<h1>500 Internal Server Error</h1>',
-                            '<p>Server encountered an unexpected error.</p>'])
+        ret_iterable.extend(['<h1>500 Internal Server Error</h1><p>Server encountered an unexpected error.</p>'])
 
         ret_iterable.extend(ErrHandle.format_tb(exc_info, lines))
 
         return ret_iterable
 
     @staticmethod
-    def format_tb(exc_info, lines = True):
-        # TODO: how to detect sys.exc_info tuple?
-#        assert(len(exc_info) == 3)
-#        assert(issubclass(exc_info[0], Exception))
-#        assert(issubclass(exc_info[1].__class__, Exception))
-#        assert(exc_info[2].__class__.__name__ == 'traceback')
-
-        
+    def format_tb(exc_info, lines = True):        
         exc_val = exc_info[1]
         exc_type = exc_info[0].__name__
         exc_tb = ErrHandle.extract_tb(exc_info[2])  # [(filename, lineno, name, line)...]
@@ -36,12 +28,11 @@ class ErrHandle:
             exc_str = str(exc_val)
 
         list = []
-        list.extend(['<p><code><b>',exc_type, ': ', exc_str, '</b><br/>',
-                    'Traceback:<br/>'])
+        list.extend(['<p><code><b>',exc_type, ': ', exc_str, '</b><br/>Traceback:<br/>'])
 
         exc_tb.reverse()
+        
         for filename, lineno, name, line in exc_tb:
-            #list.append('<li>File "<b><font color="blue">%s</font></b>", line <b>%d</b>, in "<b>%s</b>"<br/>' % (filename, lineno, name))
             list.append('File "<b><a target="_blank" href="file://%s">%s</a></b>, line <b>%d</b>, in "<b>%s</b>"<br/>' % (filename, filename, lineno, name))
             if (lines and line):
                 list.append('&nbsp;&nbsp;&nbsp;[<font color="red">%s</font>]<br/>' % line.strip())
@@ -63,17 +54,6 @@ class ErrHandle:
 
     @staticmethod
     def extract_tb(tb):
-        """Return list of up to limit pre-processed entries from traceback.
-
-        This is useful for alternate formatting of stack traces.  If
-        'limit' is omitted or None, all entries are extracted.  A
-        pre-processed stack trace entry is a quadruple (filename, line
-        number, function name, text) representing the information that is
-        usually printed for a stack trace.  The text is a string with
-        leading and trailing whitespace stripped; if the source is not
-        available it is None.
-        """
-
         list = []
         while tb is not None:
             f = tb.tb_frame
