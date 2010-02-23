@@ -50,7 +50,7 @@ class Response:
     
     def get_content_length(self):
         l = 0
-        for i in self._body:
+        for i in self.body:
             l += len(i)
         return l
 
