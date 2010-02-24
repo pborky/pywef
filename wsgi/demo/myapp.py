@@ -11,16 +11,16 @@ class MyApp(object):
         req = context.request
 
         res.status = 200
-        res.header.append(('Content-Type', 'text/html'))
+        res.headers['Content-Type'] ='text/html'
 
         self.counter += 1
         
-        res.body.append('<p>Request number: %s </p>' % self.counter)
-        res.body.append('<p>Request content: %s </p>' % req.content)
-        res.body.append('<h1>The environ contains: </h1><table>')
+        res.body_file.write('<p>Request number: %s </p>' % self.counter)
+        res.body_file.write('<h1>Request environment: </h1><table>')
+        res.body_file.write('<tr><td><b>request body</b></td><td>%s</td></tr>' % req.body)
 
         for i in req.environ.items():
-            res.body.append('<tr><td><b>%s</td><td>%s</td></tr>' % i)
+            res.body_file.write('<tr><td><b>%s</b></td><td>%s</td></tr>' % i)
 
-        res.body.append('</table>')
+        res.body_file.write('</table>')
 

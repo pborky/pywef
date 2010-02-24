@@ -10,7 +10,7 @@ Monitor().start()
 class MyApp(object):
     def __call__(self, context):
         context.response.status = 200
-        context.response.header.append(('Content-Type', 'text/plain'))
-        context.response.body.append('Hello world!\nHere be dragon soon.')
+        context.response.headers['Content-Type'] = 'text/plain'
+        context.response.body_file.write('Hello world!\nHere be dragon soon.')
 
 application = FrontControllerFactory.produce(MyApp())

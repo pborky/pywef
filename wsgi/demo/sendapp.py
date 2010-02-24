@@ -11,11 +11,11 @@ class SendApp(object):
         req = context.request
 
         res.status = 200
-        res.header.append(('Content-Type', 'text/html'))
+        res.headers['Content-Type'] = 'text/html'
 
         self.counter += 1
-        res.body.append('<p>Request number: %s </p>' % self.counter)
-        res.body.append("""<FORM method="post" action="wsgitest.py">
+        res.body_file.write('<p>Request number: %s </p>' % self.counter)
+        res.body_file.write("""<FORM method="post" action="wsgitest.py">
             <P>
             Name: <INPUT type="text" name="name"></br>
             Last: <INPUT type="text" name="last"></br>
