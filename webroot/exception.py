@@ -11,6 +11,8 @@ class MyException(Exception):
     pass
 
 class MyApp(object):
+    """ Demo application showing handling of exceptions and traceback.."""
+    
     def __call__(self, context):
         try:
             raise MyException('Hello world! This is an example exception.')
@@ -21,4 +23,4 @@ class MyApp(object):
             raise Exception('Oh! Somethig gone wrong.', sys.exc_info())
 
 
-application = FrontControllerFactory.produce(MyApp())
+application = FrontControllerFactory.produce(MyApp(), debug = True)

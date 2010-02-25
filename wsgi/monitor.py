@@ -9,6 +9,11 @@ import atexit
 import Queue
 
 class Monitor:
+    """
+    Class monitoring loaded modules and additional files for modification.
+    Interpreter process is restarted in case of change detection.
+    """
+    
     def __init__(self):
         self._interval = 1.0
         self._times = {}
@@ -99,10 +104,14 @@ class Monitor:
         self._thread.join()
 
     def track(self, path):
+        """ Add additional file to track """
+
         if not path in _files:
             self._files.append(path)
 
     def start(self, interval=1.0):
+        """ Start monitoring """
+
         self._interval = interval
         
         self._lock.acquire()

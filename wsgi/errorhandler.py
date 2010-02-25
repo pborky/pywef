@@ -7,17 +7,17 @@ from types import TracebackType
 class ErrHandle:
 
     @staticmethod
-    def format_exc(exc_info, lines = True):
+    def format_exc(exc_info, show_debug_code):
 
         ret_iterable = []
         ret_iterable.extend(['<h1>500 Internal Server Error</h1><p>Server encountered an unexpected error.</p>'])
 
-        ret_iterable.extend(ErrHandle.format_tb(exc_info, lines))
+        ret_iterable.extend(ErrHandle.format_tb(exc_info, show_debug_code))
 
         return ret_iterable
 
     @staticmethod
-    def format_tb(exc_info, lines = True):        
+    def format_tb(exc_info, show_debug_code):
         exc_val = exc_info[1]
         exc_type = exc_info[0].__name__
         exc_tb = ErrHandle.extract_tb(exc_info[2])  # [(filename, lineno, name, line)...]
@@ -28,16 +28,20 @@ class ErrHandle:
             exc_str = str(exc_val)
 
         list = []
-        list.extend(['<p><code><b>',exc_type, ': ', exc_str, '</b><br/>Traceback:<br/>'])
+        list.append('<p><code><b>%s: %s</b><br/>Traceback:<br/>' % (exc_type, exc_str))
 
         exc_tb.reverse()
         
         for filename, lineno, name, line in exc_tb:
-            list.append('File "<b><a target="_blank" href="file://%s">%s</a></b>, line <b>%d</b>, in "<b>%s</b>"<br/>' % (filename, filename, lineno, name))
-            if (lines and line):
+            if name is not None or name != '':
+                list.append('File "<b><font color="blue">%s</font></b>, line <b>%d</b>, in "<b>%s</b>"<br/>' % (filename, lineno, name.replace('<','&lt;').replace('>','&gt;')))
+            else:
+                list.append('File "<b><font color="blue">%s</font></b>, line <b>%d</b><br/>' % (filename, lineno))
+
+            if (show_debug_code and line):
                 list.append('&nbsp;&nbsp;&nbsp;[<font color="red">%s</font>]<br/>' % line.strip())
 
-        list.extend(['</code></p>'])
+        list.append('</code></p>')
 
         if (len(exc_val.args)>1):
             # TODO: how to detect sys.exc_info tuple?
@@ -48,9 +52,9 @@ class ErrHandle:
                         and issubclass(i[1].__class__, Exception)
                         and isinstance(i[2], TracebackType)):
                     list.append('<p><code><b>%s</b></code>`s root cause:</p>' % exc_type)
-                    list.extend(ErrHandle.format_tb(i, lines))
+                    list.extend(ErrHandle.format_tb(i, show_debug_code))
 
-        return list
+        return [''.join(list)]
 
     @staticmethod
     def extract_tb(tb):

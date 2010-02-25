@@ -2,7 +2,10 @@ __author__="pborky"
 __date__ ="$18.2.2010 16:40:48$"
 
 class Context(object):
-    """ """
+    """
+    Context of an application call. Contains webob.Request and webob.Response
+    wrappers. Application data should be stored here.
+    """
 
     def __init__(self, request, response):
         # TODO: fix following
@@ -16,12 +19,12 @@ class Context(object):
         self.__dict__[name] = val
     
     def _get_request(self):
-        """ """
+        """ Request wrapper. The encapsulation of environ dictionary. """
         return self._request
-    request = property(_get_request,doc =_get_request.__doc__)
+    request = property(_get_request, doc = _get_request.__doc__)
 
     def _get_response(self):
-        """ """
+        """ Response helper. Easy reponse creation. """
         return self._response
-    response = property(_get_response,doc =_get_response.__doc__)
+    response = property(_get_response, doc = _get_response.__doc__)
             

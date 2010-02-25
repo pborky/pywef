@@ -15,25 +15,35 @@ class FrontControllerFactory(object):
     _init_exc_info = None
 
     @staticmethod
-    def produce(application, debug = True):
-        """ """
+    def produce(application, debug = False, show_debug_code = True):
+        """
+        Producent of Front controller. That is stacked with midleware error
+        stack. Most fatal exceptions like missing import are catched. 
+        If debug = True traceback is showed.
+        If show_debug_code = True  then more debug lines are showing.
+        """
 
         init_exc_info =  FrontControllerFactory._init_exc_info
 
         if (FrontController == None):
             assert( init_exc_info != None )
-            return FrontControllerErrStack(None, True, init_exc_info)
+            return FrontControllerErrStack(None, debug, show_debug_code, init_exc_info)
         else:
             assert( init_exc_info == None )
-            return FrontControllerErrStack(FrontController(application), debug)
+            return FrontControllerErrStack(FrontController(application), debug, show_debug_code)
 
 class FrontControllerErrStack(object):
-    """ """
+    """
+    Error catching midleware. Intended to provide debug output - traceback.
+    If the exception is throwed with exc_info tuple as an additional argument
+    it is root cause and that is showed too.
+    """
 
-    def __init__(self, application, debug = False, init_exc_info = None):
+    def __init__(self, application, debug, show_debug_code, init_exc_info = None):
         self._application = application
         self._init_exc_info = init_exc_info
         self._debug = debug
+        self._show_debug_code = show_debug_code
     
     def __call__(self, env, start_resp):
         try:
@@ -47,7 +57,7 @@ class FrontControllerErrStack(object):
                 start_resp('500 Internal Server Error', [('Content-type', 'text/html')], exc_info)
                 try:
                     from errorhandler import ErrHandle
-                    return ErrHandle.format_exc(exc_info)
+                    return ErrHandle.format_exc(exc_info, self._show_debug_code)
                 except ImportError:
                     (type, val) = sys.exc_info()[:2]
                     msg = '<code><b>%s: %s</b></code>.'
@@ -74,7 +84,8 @@ try:
 
 
     class _FrontControllerWorker(object):
-        
+        """ Application front controller  processer """
+        #TODO: extend functionality move to separate package, this is the core so be careful
         def __init__(self, application):
             self._app = application
 
@@ -87,7 +98,7 @@ try:
                 response = Response(request = request)
                 context = Context(request, response)
                 self._app(context)
-
+            
             return context.response(environ, start_response)
 
     FrontController = _FrontControllerWorker
