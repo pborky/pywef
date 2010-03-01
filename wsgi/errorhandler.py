@@ -1,16 +1,38 @@
 __author__="pborky"
 __date__ ="$22.2.2010 0:52:47$"
 
+import sys
 import linecache
 from types import TracebackType
 
-class ErrHandle:
+class ExcInfo(object):
+    def __init__(self):
+        (cls, exc, tb) = sys.exc_info()
+        self._info = {'cls':cls, 'exc':exc, 'tb':tb}
+
+    def __iter__(self):
+        return self._info.__iter__()
+
+    def get_cls(self):
+        return self._info['cls']
+    cls = property(get_cls, doc = get_cls.__doc__)
+
+    def get_exc(self):
+        return self._info['exc']
+    exc = property(get_exc, doc = get_exc.__doc__)
+
+    def get_tb(self):
+        return self._info['tb']
+    tb = property(get_tb, doc = get_tb.__doc__)
+
+class ErrHandle(object):
 
     @staticmethod
     def format_exc(exc_info, show_debug_code):
+        assert(isinstance(exc_info, ExcInfo))
 
         ret_iterable = []
-        ret_iterable.extend(['<h1>500 Internal Server Error</h1><p>Server encountered an unexpected error.</p>'])
+        ret_iterable.extend(['<h1>500 Internal Server Error</h1><p>The server encountered an unexpected error.</p>'])
 
         ret_iterable.extend(ErrHandle.format_tb(exc_info, show_debug_code))
 
@@ -18,9 +40,10 @@ class ErrHandle:
 
     @staticmethod
     def format_tb(exc_info, show_debug_code):
-        exc_val = exc_info[1]
-        exc_type = exc_info[0].__name__
-        exc_tb = ErrHandle.extract_tb(exc_info[2])  # [(filename, lineno, name, line)...]
+        assert(isinstance(exc_info, ExcInfo))
+        exc_val = exc_info.exc
+        exc_type = exc_info.cls.__name__
+        exc_tb = ErrHandle.extract_tb(exc_info.tb)  # [(filename, lineno, name, line)...]
 
         if (len(exc_val.args) > 1):
             exc_str = str(exc_val.args[0])
@@ -44,13 +67,9 @@ class ErrHandle:
         list.append('</code></p>')
 
         if (len(exc_val.args)>1):
-            # TODO: how to detect sys.exc_info tuple?
+            # TODO: how to detect sys.exc_info tuple? Do I make an wrapper? Better than this crap..
             for i in exc_val.args:
-                if (isinstance(i,tuple)
-                        and len(i) == 3
-                        and issubclass(i[0], Exception)
-                        and issubclass(i[1].__class__, Exception)
-                        and isinstance(i[2], TracebackType)):
+                if (isinstance(i,ExcInfo)):
                     list.append('<p><code><b>%s</b></code>`s root cause:</p>' % exc_type)
                     list.extend(ErrHandle.format_tb(i, show_debug_code))
 

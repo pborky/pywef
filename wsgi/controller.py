@@ -4,6 +4,8 @@ __date__ ="$18.2.2010 16:41:24$"
 # TODO: refactor - think about how..
 
 import sys
+from errorhandler import ExcInfo, ErrHandle
+from context import Context
 
 class AppNotInitializedProperly(Exception):
     pass
@@ -51,20 +53,10 @@ class FrontControllerErrStack(object):
             else:
                 raise AppNotInitializedProperly('Front controller is missing.', self._init_exc_info)
         except: # TODO: handle webob.exc
-            exc_info = sys.exc_info()
+            exc_info = ExcInfo()
             if (self._debug):
                 start_resp('500 Internal Server Error', [('Content-type', 'text/html')], exc_info)
-                try:
-                    from errorhandler import ErrHandle
-                    return ErrHandle.format_exc(exc_info, self._show_debug_code)
-                except ImportError:
-                    (type, val) = sys.exc_info()[:2]
-                    msg = '<code><b>%s: %s</b></code>.'
-                    if (len(val.args) > 1):
-                        msg = msg % (type.__name__, str(val))
-                    else:
-                        msg = msg % (type.__name__, str(val[0]))
-                    return ['<h1>500 Internal Server Error</h1><p>Server encountered an unexpected error.</p><p>%s</p>' % msg]
+                return ErrHandle.format_exc(exc_info, self._show_debug_code)
             else:
                 start_resp('500 Internal Server Error', [('Content-type', 'text/html')])
                 return ['<h1>500 Internal Server Error</h1><p>The server encountered unexpected error.</p>']
@@ -74,17 +66,12 @@ try:
         from webob import Request
         from webob import Response
     except ImportError:
-        raise ImportError('Import failed (package webob).', sys.exc_info())
-
-    try:
-        from context import Context
-    except:
-        raise ImportError('Import failed (package wsgi.context).', sys.exc_info())
+        raise ImportError('Import failed (missing package webob).', ExcInfo())
 
     try:
         from routes import Mapper
     except:
-        raise ImportError('Import failed (package routes).', sys.exc_info())
+        raise ImportError('Import failed (missing package routes).', ExcInfo())
 
     class _FrontControllerWorker(object):
         """ Application front controller  processer """
