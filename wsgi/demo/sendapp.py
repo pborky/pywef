@@ -6,7 +6,7 @@ class SendApp(object):
     def __init__(self):
         self.counter = 0
 
-    def __call__(self, context):
+    def __call__(self, context, **kwargs):
         res = context.response
         req = context.request
 
@@ -15,7 +15,7 @@ class SendApp(object):
 
         self.counter += 1
         res.body_file.write('<p>Request number: %s </p>' % self.counter)
-        res.body_file.write("""<FORM method="post" action="wsgitest.py">
+        res.body_file.write("""<FORM method="post" action="wsgitest">
             <P>
             Name: <INPUT type="text" name="name"></br>
             Last: <INPUT type="text" name="last"></br>

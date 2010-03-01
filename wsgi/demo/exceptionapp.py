@@ -1,19 +1,15 @@
-__author__="pborky"
-__date__ ="$19.2.2010 0:21:07$"
+__author__="peterb"
+__date__ ="$1.3.2010 15:13:43$"
 
 import sys
-from wsgi.controller import FrontControllerFactory
-from wsgi.monitor import Monitor
-
-Monitor().start()
 
 class MyException(Exception):
     pass
 
-class MyApp(object):
+class ExcApp(object):
     """ Demo application showing handling of exceptions and traceback.."""
-    
-    def __call__(self, context):
+
+    def __call__(self, context, **kwargs):
         try:
             raise MyException('Hello world! This is an example exception.')
             context.response.status = 200
@@ -21,6 +17,3 @@ class MyApp(object):
             context.response.body.append('Hello world!')
         except:
             raise Exception('Oh! Somethig gone wrong.', sys.exc_info())
-
-
-application = FrontControllerFactory.produce(MyApp(), debug = True)

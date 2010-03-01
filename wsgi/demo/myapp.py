@@ -6,7 +6,7 @@ class MyApp(object):
     def __init__(self):
         self.counter = 0
 
-    def __call__(self, context):
+    def __call__(self, context, **kwargs):
         res = context.response
         req = context.request
 
