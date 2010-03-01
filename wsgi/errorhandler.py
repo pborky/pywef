@@ -3,9 +3,10 @@ __date__ ="$22.2.2010 0:52:47$"
 
 import sys
 import linecache
-from types import TracebackType
 
 class ExcInfo(object):
+    """ Encapslation of exc_info() tuple. """
+    
     def __init__(self):
         (cls, exc, tb) = sys.exc_info()
         self._info = {'cls':cls, 'exc':exc, 'tb':tb}
@@ -67,7 +68,6 @@ class ErrHandle(object):
         list.append('</code></p>')
 
         if (len(exc_val.args)>1):
-            # TODO: how to detect sys.exc_info tuple? Do I make an wrapper? Better than this crap..
             for i in exc_val.args:
                 if (isinstance(i,ExcInfo)):
                     list.append('<p><code><b>%s</b></code>`s root cause:</p>' % exc_type)

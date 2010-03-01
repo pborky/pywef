@@ -32,7 +32,7 @@ class Hello(object):
         context.response.headers['Content-Type'] = 'text/plain'
         context.response.body_file.write('Hello %s!\nHere be %d %s soon.' % (who, self.count, monster))
 
-APP_SETUP = {'debug': True,
+SERVER_SETUP = {'debug': True,
             'show_debug_code': True,
             'apps': {'index': {     'app'   : Hello,
                                     'route' : '/' },
@@ -53,11 +53,11 @@ APP_SETUP = {'debug': True,
 
                      'exception': {  'app'   : ExcApp,
                                     'route' : '/exc' } } }
-                                    
+
                     #'anyname':{'app' : AppClass         - callable class or method, must take positional argument and keyword dictionary
                     #           'app_vars' : dict        - dictionary of application init arguments (optional)
                     #           'route' : '/path'        - route path passed to routes.Mapper.connect() method
                     #           'route_vars' : {..}}     - routing variables, dict passed to routes.Mapper.connect() method
                     #                               see alse http://routes.groovie.org documentation
 
-application = FrontControllerFactory.produce(**APP_SETUP)
+application = FrontControllerFactory.produce(**SERVER_SETUP)
