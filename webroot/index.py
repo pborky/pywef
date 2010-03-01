@@ -38,9 +38,9 @@ APP_SETUP = {'debug': True,
                                     'route' : '/' },
                                     
                      'hello': {     'app'   : Hello,
-                                    'app_vars': {'count': 999}, # Hello.__init__(count=999) ..
+                                    'app_vars': {'count': 100}, # app = Hello(count=999) ..
                                     'route' : '/hello/{who}',
-                                    'route_vars': {'monster': 'snake'} }, # Hello.__call__(who=<last component of URL>, monster='snake')
+                                    'route_vars': {'monster': 'snakes'} }, # app(who={who}, monster='snake')
 
                      'send': {      'app'   : SendApp,
                                     'route' : '/send' },
