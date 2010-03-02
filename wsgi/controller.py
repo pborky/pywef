@@ -3,9 +3,14 @@ __date__ ="$18.2.2010 16:41:24$"
 
 # TODO: refactor - think about how..
 
-import sys
-from errorhandler import ExcInfo, ErrHandle
-from context import Context
+from errorhandler import ExcInfo
+from webob.exc import HTTPException
+
+try:
+    from worker import FrontControllerWorker
+except:
+    FrontControllerWorker = None
+    init_exc_info = ExcInfo()
 
 class AppNotInitializedProperly(Exception):
     pass
@@ -24,14 +29,11 @@ class FrontControllerFactory(object):
         If show_debug_code = True  then more debug lines are showing.
         """
 
-        init_exc_info =  FrontControllerFactory._init_exc_info
-
-        if (FrontController == None):
+        if (FrontControllerWorker == None):
             assert( init_exc_info != None )
             return FrontControllerErrStack(None, debug, show_debug_code, init_exc_info)
         else:
-            assert( init_exc_info == None )
-            return FrontControllerErrStack(FrontController(**apps), debug, show_debug_code)
+            return FrontControllerErrStack(FrontControllerWorker(**apps), debug, show_debug_code)
 
 class FrontControllerErrStack(object):
     """
@@ -47,98 +49,25 @@ class FrontControllerErrStack(object):
         self._show_debug_code = show_debug_code
     
     def __call__(self, environ, start_resp):
-        try:
+        try:            
             if (self._worker != None):
                 return self._worker(environ, start_resp)
             else:
-                raise AppNotInitializedProperly('Front controller is missing.', self._init_exc_info)
-        except: # TODO: handle webob.exc
+                raise AppNotInitializedProperly('Front controller is missing.',
+                            self._init_exc_info)
+
+        except HTTPException, exc:
+            
             exc_info = ExcInfo()
-            if (self._debug):
-                start_resp('500 Internal Server Error', [('Content-type', 'text/html')], exc_info)
-                return ErrHandle.format_exc(exc_info, self._show_debug_code)
-            else:
-                start_resp('500 Internal Server Error', [('Content-type', 'text/html')])
-                return ['<h1>500 Internal Server Error</h1><p>The server encountered unexpected error.</p>']
+            def repl_start_response(status, headers, exc=None):
+                if exc is None:
+                    exc = exc_info.tuple
+                return start_resp(status, headers, exc)
+            return exc(environ, repl_start_response)
 
-try:
-    try:
-        from webob import Request
-        from webob import Response
-    except ImportError:
-        raise ImportError('Import failed (missing package webob).', ExcInfo())
-
-    try:
-        from routes import Mapper
-    except:
-        raise ImportError('Import failed (missing package routes).', ExcInfo())
-
-    class _FrontControllerWorker(object):
-        """ Application front controller  processer """
-        #TODO: extend functionality move to separate package, this is the core so be careful
-        def __init__(self, **apps):
+        except Exception, exc:
             
-            if (len (apps) > 0):
-                self._apps = {}
-                self._mapper = Mapper()
+            exc_info = ExcInfo()
 
-                for key in apps.keys():
-                    # TODO: detect if appvars or rvars are passed (or reimplement using dict instead of tuple of tuples..)
-                    # if no name passed noething happens -  use the app as a key
-                    app = apps[key]
-                    app_keys = app.keys()
-                    
-                    if 'route_vars' in app_keys:
-                        route_vars = app['route_vars']
-                    else:
-                        route_vars = None
-
-                    if 'app_vars' in app_keys:
-                        app_vars = app['app_vars']
-                    else:
-                        app_vars = None
-             
-                    route = app['route']
-                    app = app['app']
-
-                    # TODO: do we support old style objects?
-                    if (not isinstance(app, type)):
-                        app_inst = app
-                    else:
-                        if (isinstance(app_vars, dict)):
-                            app_inst = app(**app_vars)
-                        else:
-                            app_inst = app()
-
-                    self._apps[key] = app_inst
-
-                    if (isinstance(route_vars, dict)):
-                        self._mapper.connect(key, route, application = app_inst, **route_vars)
-                    else:
-                        self._mapper.connect(key, route, application = app_inst)
-            else:
-                self._apps = None
-                self._mapper = None
-
-        def __call__(self, environ, start_response):
-
-            if (self._apps == None):
-                raise AppNotInitializedProperly('Missing application to execute.')
-            else:
-                request = Request(environ)
-                response = Response(request = request)
-                context = Context(request, response)
-                route = self._mapper.match(environ=environ)
-                if not (route != None):
-                    # TODO: use webob.exc
-                    raise Exception('Not found.')
-                app = route.pop('application')
-                app(context, **route)
-            
-            return context.response(environ, start_response)
-
-    FrontController = _FrontControllerWorker
-except:
-    FrontController = None
-    FrontControllerFactory._init_exc_info = sys.exc_info()
+            return exc_info(start_resp, self._debug, self._show_debug_code)
 

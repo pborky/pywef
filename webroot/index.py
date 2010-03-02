@@ -6,53 +6,35 @@ from wsgi.demo.testapp import test_app
 from wsgi.demo.sendapp import SendApp
 from wsgi.demo.myapp import MyApp
 from wsgi.demo.exceptionapp import ExcApp
+from wsgi.demo.helloapp import Hello
 from wsgi.monitor import Monitor
 
 Monitor().start()
 
-class Hello(object):
-    """ Demo application showing hello world.."""
-    def __init__(self, **kwargs):
-        if 'count' in kwargs:
-            self.count = kwargs['count']
-        else:
-            self.count = 1
-
-    def __call__(self, context, **kwargs):
-        monster = 'dragon'
-        who = 'world'
-        
-        if 'monster' in kwargs.keys():
-            monster = str(kwargs['monster'])
-
-        if 'who' in kwargs.keys():
-            who = str(kwargs['who'])            
-
-        context.response.status = 200
-        context.response.headers['Content-Type'] = 'text/plain'
-        context.response.body_file.write('Hello %s!\nHere be %d %s soon.' % (who, self.count, monster))
-
 SERVER_SETUP = {'debug': True,
-            'show_debug_code': True,
-            'apps': {'index': {     'app'   : Hello,
+                'show_debug_code': True,
+                'apps': {'index': { 'app'   : Hello,
                                     'route' : '/' },
-                                    
-                     'hello': {     'app'   : Hello,
-                                    'app_vars': {'count': 100}, # app = Hello(count=999) ..
-                                    'route' : '/hello/{who}',
-                                    'route_vars': {'monster': 'snakes'} }, # app(who={who}, monster='snake')
 
-                     'send': {      'app'   : SendApp,
+                         'hello': { 'app'   : Hello,
+                                    'app_vars': {'count': 100}, # app = Hello(count=100) ..
+                                    'route' : '/hello/{who}',
+                                    'route_vars': {'monster': 'snakes'} }, # app(context, who={who}, monster='snake')
+
+                         'send': {  'app'   : SendApp,
                                     'route' : '/send' },
 
-                     'wsgitest': {  'app'   : MyApp,
+                         'recv': {  'app'   : MyApp,
                                     'route' : '/wsgitest' },
 
-                     'test': {       'app'   : test_app,
+                         'test': {  'app'   : test_app,
                                     'route' : '/test' },
 
-                     'exception': {  'app'   : ExcApp,
-                                    'route' : '/exc' } } }
+                         'exc':  {  'app'   : ExcApp,
+                                    'route' : '/exc/' },
+
+                         'move': {  'app'   : ExcApp,
+                                    'route' : '/exc/{move}' } } }
 
                     #'anyname':{'app' : AppClass         - callable class or method, must take positional argument and keyword dictionary
                     #           'app_vars' : dict        - dictionary of application init arguments (optional)
