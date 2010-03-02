@@ -1,7 +1,7 @@
 __author__="pborky"
 __date__ ="$19.2.2010 0:21:07$"
 
-from wsgi.controller import FrontControllerFactory
+from wsgi.controller import FrontController
 from wsgi.demo.testapp import test_app
 from wsgi.demo.sendapp import SendApp
 from wsgi.demo.myapp import MyApp
@@ -11,14 +11,20 @@ from wsgi.monitor import Monitor
 
 Monitor().start()
 
+def favicon(context, **kwargs):
+    pass
+
 SERVER_SETUP = {'debug': True,
                 'show_debug_code': True,
                 'apps': {'index': { 'app'   : Hello,
                                     'route' : '/' },
 
-                         'hello': { 'app'   : Hello,
+                         'favi': {  'app'   : favicon,
+                                    'route' : '/favicon.ico' },
+
+                         'hello': { 'app'   : Hello,            #
                                     'app_vars': {'count': 100}, # app = Hello(count=100) ..
-                                    'route' : '/hello/{who}',
+                                    'route' : '/hello/{who}',              #
                                     'route_vars': {'monster': 'snakes'} }, # app(context, who={who}, monster='snake')
 
                          'send': {  'app'   : SendApp,
@@ -42,4 +48,4 @@ SERVER_SETUP = {'debug': True,
                     #           'route_vars' : {..}}     - routing variables, dict passed to routes.Mapper.connect() method
                     #                               see alse http://routes.groovie.org documentation
 
-application = FrontControllerFactory.produce(**SERVER_SETUP)
+application = FrontController.produce(**SERVER_SETUP)

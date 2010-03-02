@@ -15,32 +15,27 @@ except:
 class AppNotInitializedProperly(Exception):
     pass
 
-class FrontControllerFactory(object):
-    """ Factory class. """
-
-    _init_exc_info = None
+class FrontController(object):
+    """
+    Error catching midleware. Intended to provide debug output - traceback.
+    If the exception is throwed with exc_info tuple as an additional argument
+    it is root cause and that is showed too.
+    """
 
     @staticmethod
     def produce(apps, debug = False, show_debug_code = True):
         """
         Producent of Front controller. That is stacked with midleware error
-        stack. Most fatal exceptions like missing import are catched. 
+        stack. Most fatal exceptions like missing import are catched.
         If debug = True traceback is showed.
         If show_debug_code = True  then more debug lines are showing.
         """
 
         if (FrontControllerWorker == None):
             assert( init_exc_info != None )
-            return FrontControllerErrStack(None, debug, show_debug_code, init_exc_info)
+            return FrontController(None, debug, show_debug_code, init_exc_info)
         else:
-            return FrontControllerErrStack(FrontControllerWorker(**apps), debug, show_debug_code)
-
-class FrontControllerErrStack(object):
-    """
-    Error catching midleware. Intended to provide debug output - traceback.
-    If the exception is throwed with exc_info tuple as an additional argument
-    it is root cause and that is showed too.
-    """
+            return FrontController(FrontControllerWorker(**apps), debug, show_debug_code)
 
     def __init__(self, worker, debug, show_debug_code, init_exc_info = None):
         self._worker = worker
