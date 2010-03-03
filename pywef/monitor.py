@@ -30,7 +30,7 @@ class Monitor:
 
     def _restart(self, path):
         self._queue.put(True)
-        prefix = 'monitor (pid=%d):' % os.getpid()
+        prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
         print >> sys.stderr, '%s Change detected to \'%s\'.' % (prefix, path)
         print >> sys.stderr, '%s Triggering process restart.' % prefix
         os.kill(os.getpid(), signal.SIGINT)
@@ -117,7 +117,7 @@ class Monitor:
         self._lock.acquire()
         
         if not self._running:
-            prefix = 'monitor (pid=%d):' % os.getpid()
+            prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
             print >> sys.stderr, '%s Starting change monitor.' % prefix
             self._running = True
             self._thread.start()

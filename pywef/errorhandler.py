@@ -27,7 +27,7 @@ class ExcInfo(object):
             return self._info[key]
 
     def _log_it(self):
-        prefix = '%s (pid=%d):' % (self.__class__.__name__ ,os.getpid())
+        prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
         print >> sys.stderr, '%s Handling exception: %s' % (prefix, self._get_traceback())
 
     def _get_tuple(self):
