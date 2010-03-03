@@ -1,13 +1,13 @@
 __author__="pborky"
 __date__ ="$19.2.2010 0:21:07$"
 
-from wsgi.controller import FrontController
-from wsgi.demo.testapp import test_app
-from wsgi.demo.sendapp import SendApp
-from wsgi.demo.myapp import MyApp
-from wsgi.demo.exceptionapp import ExcApp
-from wsgi.demo.helloapp import Hello
-from wsgi.monitor import Monitor
+from pywef.controller import FrontController
+from pywef.demo.testapp import test_app
+from pywef.demo.sendapp import SendApp
+from pywef.demo.myapp import MyApp
+from pywef.demo.exceptionapp import ExcApp
+from pywef.demo.helloapp import Hello
+from pywef.monitor import Monitor
 
 Monitor().start()
 

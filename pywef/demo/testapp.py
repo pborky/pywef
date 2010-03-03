@@ -2,9 +2,6 @@ __author__="peterb"
 __date__ ="$1.3.2010 14:50:31$"
 
 import os
-from wsgi.monitor import Monitor
-
-Monitor().start()
 
 def test_app(context, **kwargs):
     res = context.response

@@ -1,7 +1,7 @@
 __author__="peterb"
 __date__ ="$1.3.2010 15:13:43$"
 
-from wsgi.errorhandler import ExcInfo
+from pywef.errorhandler import ExcInfo
 from webob.exc import HTTPMovedPermanently
 
 class MyException(Exception):
