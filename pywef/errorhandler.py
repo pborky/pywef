@@ -28,8 +28,7 @@ class ExcInfo(object):
 
     def _log_it(self):
         prefix = 'excinfo (pid=%d):' % os.getpid()
-        print >> sys.stderr, '%s Handling exception \'%s\'.' % (prefix, self.typename)
-        print >> sys.stderr, '%s %s' % (prefix, self._get_traceback())
+        print >> sys.stderr, '%s Handling exception: %s' % (prefix, self._get_traceback())
 
     def _get_tuple(self):
         return tuple(self)
@@ -86,21 +85,21 @@ class ExcInfo(object):
         exc_str = self.detail
 
         list = []
-        list.append('%s: %s\n->Traceback:\n' % (exc_type, exc_str))
+        list.append('\n  %s: %s\n    Traceback:\n' % (exc_type, exc_str))
 
         exc_tb.reverse()
 
         for filename, lineno, name, line in exc_tb:
             if name is not None or name != '':
-                list.append('->  File "%s, line %d, in "%s"\n' % (filename, lineno, name.replace('<','&lt;').replace('>','&gt;')))
+                list.append('      File "%s, line %d, in "%s"\n' % (filename, lineno, name.replace('<','&lt;').replace('>','&gt;')))
             else:
-                list.append('->  File "%s, line %d\n' % (filename, lineno))
+                list.append('      File "%s, line %d\n' % (filename, lineno))
 
             if (line):
-                list.append('->       [%s]\n' % line.strip())
+                list.append('         [%s]\n' % line.strip())
 
         for i in self.nested:
-            list.append('->%s`s root cause:' % exc_type)
+            list.append('  %s`s root cause:' % exc_type)
             list.append(i._get_traceback())
 
         return ''.join(list)
