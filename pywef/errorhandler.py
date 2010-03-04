@@ -18,7 +18,7 @@ class ExcInfo(object):
 
     def __call__(self, start_resp, debug = False, show_debug_code = True):
         start_resp('500 Internal Server Error', [('Content-type', 'text/html')], self.tuple)
-        return ''.join(self._get_resp_body(debug, show_debug_code))
+        return [''.join(self._get_resp_body(debug, show_debug_code))]
 
     def __getitem__(self, key):
         if (isinstance(key, int)):
@@ -74,9 +74,9 @@ class ExcInfo(object):
                     '<p>The server has either erred or is incapable of performing\n'
                     'the requested operation.\n</p>')
         if debug:
-            list.extend(self._format_tb_html(show_debug_code))
+            list.append(self._format_tb_html(show_debug_code))
         else:
-            list.append(['<code><b>%s: %s</b></code>' % (self.typename, self.detail)])
+            list.append('<code><b>%s: %s</b></code>' % (self.typename, self.detail))
         return list
 
     def _get_traceback(self):
@@ -129,7 +129,7 @@ class ExcInfo(object):
             list.append('<p><code><b>%s</b></code>`s root cause:</p>' % exc_type)
             list.extend(i._format_tb_html(show_debug_code))
 
-        return [''.join(list)]
+        return ''.join(list)
 
 def _extract_tb(tb):
     list = []

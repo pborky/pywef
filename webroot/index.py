@@ -48,4 +48,4 @@ SERVER_SETUP = {'debug': True,
                     #           'route_vars' : {..}}     - routing variables, dict passed to routes.Mapper.connect() method
                     #                               see alse http://routes.groovie.org documentation
 
-application = FrontController.produce(**SERVER_SETUP)
+application = FrontController(**SERVER_SETUP)

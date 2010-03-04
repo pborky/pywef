@@ -8,6 +8,7 @@ from webob.exc import HTTPException
 
 try:
     from worker import FrontControllerWorker
+    init_exc_info = None
 except:
     FrontControllerWorker = None
     init_exc_info = ExcInfo()
@@ -22,23 +23,12 @@ class FrontController(object):
     it is root cause and that is showed too.
     """
 
-    @staticmethod
-    def produce(apps, debug = False, show_debug_code = True):
-        """
-        Producent of Front controller. That is stacked with midleware error
-        stack. Most fatal exceptions like missing import are catched.
-        If debug = True traceback is showed.
-        If show_debug_code = True  then more debug lines are showing.
-        """
-
+    def __init__(self, apps, debug = False, show_debug_code = True):
         if (FrontControllerWorker == None):
-            assert( init_exc_info != None )
-            return FrontController(None, debug, show_debug_code, init_exc_info)
+            self._worker = None
         else:
-            return FrontController(FrontControllerWorker(**apps), debug, show_debug_code)
-
-    def __init__(self, worker, debug, show_debug_code, init_exc_info = None):
-        self._worker = worker
+            self._worker = FrontControllerWorker(**apps)
+        
         self._init_exc_info = init_exc_info
         self._debug = debug
         self._show_debug_code = show_debug_code
