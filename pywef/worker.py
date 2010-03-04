@@ -1,4 +1,3 @@
-import context
 __author__="pborky"
 __date__ ="$1.3.2010 23:44:36$"
 
@@ -7,9 +6,11 @@ from routes import Mapper
 from webob.exc import HTTPBadRequest
 from webob.exc import HTTPMovedPermanently
 
-class _FrontControllerWorker(object):
+class FrontControllerWorker(object):
     """ Application front controller  processer """
     def __init__(self, **apps):
+        self._apps = None
+        self._mapper = None
 
         if (len (apps) > 0):
             self._apps = {}
@@ -47,9 +48,6 @@ class _FrontControllerWorker(object):
                     self._mapper.connect(key, route, application = app_inst, **route_vars)
                 else:
                     self._mapper.connect(key, route, application = app_inst)
-        else:
-            self._apps = None
-            self._mapper = None
 
     def __call__(self, environ, start_response):
 
@@ -66,7 +64,5 @@ class _FrontControllerWorker(object):
             app = route.pop('application')
             app(context, **route)
 
-        return context.return_response
-
-FrontControllerWorker = _FrontControllerWorker
+        return context.return_response()
 

@@ -28,6 +28,5 @@ class Context(object):
         return self._response
     response = property(_get_response, doc = _get_response.__doc__)
 
-    def _return_response(self):
+    def return_response(self):
         return self.response(self.request.environ, self._start_response)
-    return_response = property(_return_response, doc = _return_response.__doc__)

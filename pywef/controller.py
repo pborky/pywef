@@ -14,6 +14,7 @@ except:
     init_exc_info = ExcInfo()
 
 class AppNotInitializedProperly(Exception):
+    #TODO: consider subclassing from webob.exc...
     pass
 
 class FrontController(object):
@@ -42,6 +43,7 @@ class FrontController(object):
                             self._init_exc_info)
 
         except HTTPException, exc:
+            #TODO: add cooler responses..
             
             exc_info = ExcInfo()
             def repl_start_response(status, headers, exc=None):

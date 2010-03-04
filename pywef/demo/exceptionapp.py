@@ -12,7 +12,7 @@ class ExcApp(object):
 
     def __call__(self, context, **kwargs):
         if 'move' in kwargs:
-            loc = kwargs['move']
+            loc = '/'+kwargs['move']
             raise HTTPMovedPermanently('Redirecting to "%s".' % loc, location = loc)
         try:
             raise MyException('Hello world! This is an example exception.')
