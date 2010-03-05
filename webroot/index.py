@@ -16,30 +16,30 @@ def favicon(context, **kwargs):
 
 SERVER_SETUP = {'debug': True,
                 'show_debug_code': True,
-                'controllers': {'index': { 'app'   : Hello,
+                'controllers': {'index': { 'ctrl'  : Hello,
                                            'route' : '/' },
 
-                                 'favi': {  'app'   : favicon,
+                                 'favi': {  'ctrl'  : favicon,
                                             'route' : '/favicon.ico' },
 
-                                 'hello': { 'app'   : Hello,            # instantionate class invoking
-                                            'app_vars': {'count': 100}, # app = Hello(count=100) ..
+                                 'hello': { 'ctrl'  : Hello,            # instantionate class invoking
+                                            'ctrl_vars': {'count': 100}, # app = Hello(count=100) ..
                                             'route' : '/hello/{who}',              # on each request invoking
                                             'route_vars': {'monster': 'snakes'} }, # app(context, who={who}, monster='snake')
 
-                                 'send': {  'app'   : SendApp,
+                                 'send': {  'ctrl'  : SendApp,
                                             'route' : '/send' },
 
-                                 'recv': {  'app'   : MyApp,
+                                 'recv': {  'ctrl'  : MyApp,
                                             'route' : '/wsgitest' },
 
-                                 'test': {  'app'   : test_app,
+                                 'test': {  'ctrl'  : test_app,
                                             'route' : '/test' },
 
-                                 'exc':  {  'app'   : ExcApp,
+                                 'exc':  {  'ctrl'  : ExcApp,
                                             'route' : '/exc/' },
 
-                                 'move': {  'app'   : ExcApp,
+                                 'move': {  'ctrl'  : ExcApp,
                                             'route' : '/exc/{move}' } } }
 
                         #'anyname':{'app' : AppClass         - callable class or method, must take positional argument and keyword dictionary
