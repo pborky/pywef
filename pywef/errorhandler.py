@@ -5,11 +5,24 @@ import sys
 import os
 import linecache
 
+# TODO: change module name to exc
+
+class ControllerNotInitializedProperly(Exception):
+    #TODO: consider subclassing from webob.exc... shorten name
+    pass
+
+class ControllerInitializationError(Exception):
+    #TODO: consider subclassing from webob.exc... shorten name
+    pass
+
 class ExcInfo(object):
     """ Encapslation of exc_info() tuple. """
     
-    def __init__(self):
-        (cls, exc, tb) = sys.exc_info()
+    def __init__(self, exc_info = None):
+        if exc_info == None:
+            (cls, exc, tb) = sys.exc_info()
+        else:
+            (cls, exc, tb) = exc_info
         self._info = {'cls':cls, 'exc':exc, 'tb':tb}
         self._log_it()
 

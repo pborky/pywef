@@ -4,6 +4,7 @@ __date__ ="$18.2.2010 16:41:24$"
 # TODO: refactor - think about how..
 
 from errorhandler import ExcInfo
+from errorhandler import ControllerNotInitializedProperly
 from webob.exc import HTTPException
 
 try:
@@ -13,10 +14,6 @@ except:
     FrontControllerWorker = None
     init_exc_info = ExcInfo()
 
-class AppNotInitializedProperly(Exception):
-    #TODO: consider subclassing from webob.exc...
-    pass
-
 class FrontController(object):
     """
     Error catching midleware. Intended to provide debug output - traceback.
@@ -24,22 +21,27 @@ class FrontController(object):
     it is root cause and that is showed too.
     """
 
-    def __init__(self, apps, debug = False, show_debug_code = True):
-        if (FrontControllerWorker == None):
-            self._worker = None
-        else:
-            self._worker = FrontControllerWorker(**apps)
+    def __init__(self, controllers, debug = False, show_debug_code = True):
         
-        self._init_exc_info = init_exc_info
+        self._init_exc_info = None
+        self._worker = None
         self._debug = debug
         self._show_debug_code = show_debug_code
+
+        if (FrontControllerWorker == None):
+            self._init_exc_info = init_exc_info
+        else:
+            try:
+                self._worker = FrontControllerWorker(**controllers)
+            except:
+                self._init_exc_info = ExcInfo()
     
     def __call__(self, environ, start_resp):
         try:            
             if (self._worker != None):
                 return self._worker(environ, start_resp)
             else:
-                raise AppNotInitializedProperly('Front controller is missing.',
+                raise ControllerNotInitializedProperly('Front controller is missing.',
                             self._init_exc_info)
 
         except HTTPException, exc:
