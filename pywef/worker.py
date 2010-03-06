@@ -6,7 +6,7 @@ from routes import Mapper
 from errorhandler import ControllerInitializationError
 from errorhandler import ControllerNotInitializedProperly
 from webob.exc import HTTPBadRequest
-from webob.exc import HTTPMovedPermanently
+from webob.exc import HTTPFound
 
 class FrontControllerWorker(object):
     """ Application front controller  processer """
