@@ -52,9 +52,9 @@ class FrontControllerWorker(object):
                     self._controllers[key] = ctrl_inst
 
                     if (isinstance(route_vars, dict)):
-                        self._mapper.connect(key, route, controller = ctrl_inst, **route_vars)
+                        self._mapper.connect(key, route, controller = key, **route_vars)
                     else:
-                        self._mapper.connect(key, route, controller = ctrl_inst)
+                        self._mapper.connect(key, route, controller = key)
 
     def __call__(self, environ, start_response):
 
@@ -67,12 +67,16 @@ class FrontControllerWorker(object):
             route = self._mapper.match(environ=environ)
             if route == None:
                 if not context.request.path_url.endswith('/'):
-                    raise HTTPMovedPermanently('Trying add trailing slash.', add_slash=True)
+                    raise HTTPFound('Trying add trailing slash.', add_slash=True)
                 else:
                     raise HTTPBadRequest('Requested route %s not found.' % context.request.path_url)
-            ctrl = route.pop('controller')
+            ctrl = self._controllers[route['controller']]
             # TODO: test if callable and raise ControllerNotInitializedProperly respectively
             ctrl(context, **route)
 
         return context.return_response()
 
+    def _get_mapper(self):
+        """"""
+        return self._mapper
+    mapper = property(_get_mapper, doc = _get_mapper.__doc__)

@@ -2,7 +2,6 @@ __author__="peterb"
 __date__ ="$1.3.2010 15:13:43$"
 
 from pywef.errorhandler import ExcInfo
-from webob.exc import HTTPMovedPermanently
 
 class MyException(Exception):
     pass
@@ -10,10 +9,9 @@ class MyException(Exception):
 class ExcApp(object):
     """ Demo application showing handling of exceptions and traceback.."""
 
-    def __call__(self, context, **kwargs):
-        if 'move' in kwargs:
-            loc = '/'+kwargs['move']
-            raise HTTPMovedPermanently('Redirecting to "%s".' % loc, location = loc)
+    def __call__(self, context, move = None, **kwargs):
+        if move != None:
+            context.redirect(move)
         try:
             raise MyException('Hello world! This is an example exception.')
             context.response.status = 200
