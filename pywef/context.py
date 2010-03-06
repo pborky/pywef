@@ -5,7 +5,6 @@ from errorhandler import ExcInfo
 from webob import Request
 from webob import Response
 from webob.exc import HTTPFound
-from routes.util import URLGenerator
 from routes.util import GenerationException
 
 class Context(object):
@@ -42,7 +41,7 @@ class Context(object):
     def _get_url_generator(self):
         """ """
         if self._url_gen == None:
-            self._url_gen = URLGenerator(self._worker.mapper, self._request.environ)
+            self._url_gen = self._request.environ['routes.url']
         return self._url_gen
     url_generator = property(_get_url_generator, doc = _get_url_generator.__doc__)
 

@@ -10,13 +10,14 @@ from webob.exc import HTTPFound
 
 class FrontControllerWorker(object):
     """ Application front controller  processer """
+    #TODO: use of submappers for actions use
     def __init__(self, **controllers):
         self._controllers = None
-        self._mapper = None
+        self.mapper = None
 
         if (len (controllers) > 0):
             self._controllers = {}
-            self._mapper = Mapper()
+            self.mapper = Mapper()
 
             for key in controllers.keys():
                 ctrl = controllers[key]
@@ -25,7 +26,7 @@ class FrontControllerWorker(object):
                     ctrl_keys = ctrl.keys()
 
                     if not ('ctrl' in ctrl_keys and 'route' in ctrl_keys):
-                        raise ControllerInitializationError('Arguments "app" and "route" are required.')
+                        raise ControllerInitializationError('Arguments "ctrl" and "route" are required.')
 
                     if 'route_vars' in ctrl_keys:
                         route_vars = ctrl['route_vars']
@@ -52,19 +53,19 @@ class FrontControllerWorker(object):
                     self._controllers[key] = ctrl_inst
 
                     if (isinstance(route_vars, dict)):
-                        self._mapper.connect(key, route, controller = key, **route_vars)
+                        self.mapper.connect(key, route, controller = key, **route_vars)
                     else:
-                        self._mapper.connect(key, route, controller = key)
+                        self.mapper.connect(key, route, controller = key)
 
     def __call__(self, environ, start_response):
 
         if (self._controllers == None
                 or len(self._controllers) == 0
-                or self._mapper == None):
+                or self.mapper == None):
             raise ControllerNotInitializedProperly('Missing controller to execute.')
         else:
             context = Context(environ=environ, start_response = start_response, worker = self)
-            route = self._mapper.match(environ=environ)
+            route = self.mapper.match(environ=environ)
             if route == None:
                 if not context.request.path_url.endswith('/'):
                     raise HTTPFound('Trying add trailing slash.', add_slash=True)
@@ -75,8 +76,3 @@ class FrontControllerWorker(object):
             ctrl(context, **route)
 
         return context.return_response()
-
-    def _get_mapper(self):
-        """"""
-        return self._mapper
-    mapper = property(_get_mapper, doc = _get_mapper.__doc__)

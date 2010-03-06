@@ -9,9 +9,11 @@ from webob.exc import HTTPException
 
 try:
     from worker import FrontControllerWorker
+    from routes.middleware import RoutesMiddleware
     init_exc_info = None
 except:
     FrontControllerWorker = None
+    RoutesMiddleware  = None
     init_exc_info = ExcInfo()
 
 class FrontController(object):
@@ -20,7 +22,7 @@ class FrontController(object):
     If the exception is throwed with exc_info tuple as an additional argument
     it is root cause and that is showed too.
     """
-
+    
     def __init__(self, controllers, debug = False, show_debug_code = True):
         
         self._init_exc_info = None
@@ -32,7 +34,11 @@ class FrontController(object):
             self._init_exc_info = init_exc_info
         else:
             try:
-                self._worker = FrontControllerWorker(**controllers)
+                worker = FrontControllerWorker(**controllers)
+                if RoutesMiddleware == None:
+                    self._worker = worker
+                else:
+                    self._worker = RoutesMiddleware(worker, worker.mapper, singleton = True)
             except:
                 self._init_exc_info = ExcInfo()
     
