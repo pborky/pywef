@@ -139,7 +139,7 @@ class HTTPCreated(HTTPOk):
 class HTTPAccepted(HTTPOk):
     code = 202
     title = 'Accepted'
-    explanation = 'The request is accepted for processing.'
+    explanation = ('The request is accepted for processing.',)
 
 class HTTPNonAuthoritativeInformation(HTTPOk):
     code = 203
@@ -264,95 +264,95 @@ class HTTPUnauthorized(HTTPClientError):
 class HTTPPaymentRequired(HTTPClientError):
     code = 402
     title = 'Payment Required'
-    explanation = ('Access was denied for financial reasons.')
+    explanation = ('Access was denied for financial reasons.',)
 
 class HTTPForbidden(HTTPClientError):
     code = 403
     title = 'Forbidden'
-    explanation = ('Access was denied to this resource.')
+    explanation = ('Access was denied to this resource.',)
 
 class HTTPNotFound(HTTPClientError):
     code = 404
     title = 'Not Found'
-    explanation = ('The resource could not be found.')
+    explanation = ('The resource could not be found.',)
 
 class HTTPMethodNotAllowed(HTTPClientError):
     code = 405
     title = 'Method Not Allowed'
-    explanation = ('The method ${REQUEST_METHOD} is not allowed for this resource.')
+    explanation = ('The method ${REQUEST_METHOD} is not allowed for this resource.',)
 
 class HTTPNotAcceptable(HTTPClientError):
     code = 406
     title = 'Not Acceptable'
-    explanation = ('The resource could not be generated that was acceptable to your browser'
+    explanation = ('The resource could not be generated that was acceptable to your browser',
                    '(content of type ${HTTP_ACCEPT}).')
 
 class HTTPProxyAuthenticationRequired(HTTPClientError):
     code = 407
     title = 'Proxy Authentication Required'
-    explanation = ('Authentication with a local proxy is needed.')
+    explanation = ('Authentication with a local proxy is needed.',)
 
 class HTTPRequestTimeout(HTTPClientError):
     code = 408
     title = 'Request Timeout'
-    explanation = ('The server has waited too long for the request to be sent by the client.')
+    explanation = ('The server has waited too long for the request to be sent by the client.',)
 
 class HTTPConflict(HTTPClientError):
     code = 409
     title = 'Conflict'
-    explanation = ('There was a conflict when trying to complete your request.')
+    explanation = ('There was a conflict when trying to complete your request.',)
 
 class HTTPGone(HTTPClientError):
     code = 410
     title = 'Gone'
-    explanation = ('This resource is no longer available.  No forwarding address is given.')
+    explanation = ('This resource is no longer available.  No forwarding address is given.',)
 
 class HTTPLengthRequired(HTTPClientError):
     code = 411
     title = 'Length Required'
-    explanation = ('Content-Length header required.')
+    explanation = ('Content-Length header required.',)
 
 class HTTPPreconditionFailed(HTTPClientError):
     code = 412
     title = 'Precondition Failed'
-    explanation = ('Request precondition failed.')
+    explanation = ('Request precondition failed.',)
 
 class HTTPRequestEntityTooLarge(HTTPClientError):
     code = 413
     title = 'Request Entity Too Large'
-    explanation = ('The body of your request was too large for this server.')
+    explanation = ('The body of your request was too large for this server.',)
 
 class HTTPRequestURITooLong(HTTPClientError):
     code = 414
     title = 'Request-URI Too Long'
-    explanation = ('The request URI was too long for this server.')
+    explanation = ('The request URI was too long for this server.',)
 
 class HTTPUnsupportedMediaType(HTTPClientError):
     code = 415
     title = 'Unsupported Media Type'
-    explanation = ('The request media type ${CONTENT_TYPE} is not supported by this server.')
+    explanation = ('The request media type ${CONTENT_TYPE} is not supported by this server.',)
 
 class HTTPRequestRangeNotSatisfiable(HTTPClientError):
     code = 416
     title = 'Request Range Not Satisfiable'
-    explanation = ('The Range requested is not available.')
+    explanation = ('The Range requested is not available.',)
 
 class HTTPExpectationFailed(HTTPClientError):
     code = 417
     title = 'Expectation Failed'
-    explanation = ('Expectation failed.')
+    explanation = ('Expectation failed.',)
 
 class HTTPUnprocessableEntity(HTTPClientError):
     ## Note: from WebDAV
     code = 422
     title = 'Unprocessable Entity'
-    explanation = ('Unable to process the contained instructions')
+    explanation = ('Unable to process the contained instructions',)
 
 class HTTPLocked(HTTPClientError):
     ## Note: from WebDAV
     code = 423
     title = 'Locked'
-    explanation = ('The resource is locked')
+    explanation = ('The resource is locked',)
 
 class HTTPFailedDependency(HTTPClientError):
     ## Note: from WebDAV

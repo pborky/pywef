@@ -37,9 +37,11 @@ ${_items}
 
 ${_nested}''')
     plain_tb_item = Template('''\
-    File "${filename}, line ${lineno}, in "${name}"''')
+    File "${filename}, line ${lineno}, in "${name}"
+''')
     plain_tb_item_code = Template('''\
-       [${line}]''')
+       [${line}]
+''')
     plain_tb_nested = Template('''\
 ${exception}`s root cause:
 ${nest_exception}: ${nest_detail}
