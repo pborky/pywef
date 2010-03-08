@@ -174,17 +174,13 @@ ${_nest_traceback}''')
         if location == None:
             args['location'] = ''
         else:
-            args['location'] = '<a href="{0}">{0}</a>'.format(escape(location))
+            args['location'] = Template('<a href="${location}">${location}</a>').substitute(escape(location))
 
         for k, v in environ.items():
             args[k] = escape(v)
         for k, v in headerlist:
             args[k.lower()] = escape(v)
-        expl = []
-        for i in explanation:
-            expl.append(i)
-            expl.append('\r\n')
-        t = Template(''.join(expl))
+        t = Template(''.join(explanation))
         args['explanation'] = t.substitute(args)
         if debug == 0:
             args['_traceback'] = ''
