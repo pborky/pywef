@@ -5,6 +5,7 @@ __date__ ="$18.2.2010 16:41:24$"
 # TODO: refactor - think about how..
 
 from exc import ExcInfoWrapper, NotInitializedProperly, HTTPOk, HTTPRedirection, HTTPError, HTTPInternalServerError
+from pywef.logger import set_logger
 
 try:
     from worker import FrontControllerWorker
@@ -22,18 +23,30 @@ class FrontController(object):
     it is root cause and that is showed too.
     """
     
-    def __init__(self, controllers, debug = 0):
+    def __init__(self, controllers, debug = None, loggers = None):
 
-        if isinstance(debug, int):
-            self._debug = debug
+        if debug == None:
+            self._debug = False
         else:
-            if debug:
-                self._debug = 2
-            else:
-                self._debug = 0
-            
+            self._debug = debug
+        
         self._init_exc_info = None
         self._worker = None
+        #try:
+        if loggers != None:
+            for name, data in loggers.items():
+                exc = data.get('exc')
+                if exc != None:
+                    init = exc.get('init', False)
+                    call = exc.get('call', False)
+                    ExcInfoWrapper._loggers.append((name, init, call))
+                file = data.get('file')
+                fname = file.get('name')
+                size = file.get('size')
+                count = file.get('count')
+                set_logger(name, fname, max_bytes = size, backup_count = count)
+        #except:
+        #    self._init_exc_info = ExcInfoWrapper()
 
         if (FrontControllerWorker == None):
             self._init_exc_info = init_exc_info

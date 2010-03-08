@@ -9,7 +9,7 @@ import atexit
 import Queue
 from pywef.logger import get_logger
 
-logger = get_logger('pywef')
+logger = get_logger('default')
 
 class Monitor:
     """

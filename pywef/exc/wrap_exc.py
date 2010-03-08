@@ -13,8 +13,6 @@ from traceback import extract_tb
 from pywef.logger import get_logger
 import http_exc
 
-logger = get_logger('pywef')
-
 def no_escape(value):
     if value is None:
         return ''
@@ -37,12 +35,9 @@ ${_traceback}''')
     plain_tb = Template('''\
   Traceback:
 ${_items}
-
 ${_nested}''')
     plain_tb_item = Template('''\
     File "${filename}, line ${lineno}, in "${name}"
-''')
-    plain_tb_item_code = Template('''\
        [${line}]
 ''')
     plain_tb_nested = Template('''\
@@ -69,8 +64,7 @@ ${_nested}''')
 <code>
 File "<b><font color="blue">${filename}</font></b>,
 line <b>${lineno}</b>,
-in "<b>${name}</b>"</code><br/>''')
-    html_tb_item_code = Template('''\
+in "<b>${name}</b>"</code><br/>
 <code>&nbsp;&nbsp;&nbsp;[<font color="red">${line}</font>]</code><br/>''')
     html_tb_nested = Template('''\
 <p><code><b>${exception}</b></code>`s root cause:</p>
@@ -84,7 +78,6 @@ ${_nest_traceback}''')
             'traceback' : {
                 'template' : html_tb,
                 'item' : html_tb_item,
-                'code' : html_tb_item_code,
                 'nested' : html_tb_nested } },
         'plain' : {
             'escape' : no_escape,
@@ -92,8 +85,9 @@ ${_nest_traceback}''')
             'traceback' : {
                 'template' : plain_tb,
                 'item' : plain_tb_item,
-                'code' : plain_tb_item_code,
                 'nested' : plain_tb_nested } } }
+
+    _loggers = []
 
     def __init__(self, exc_info = None):
         if exc_info == None:
@@ -101,7 +95,16 @@ ${_nest_traceback}''')
         else:
             (cls, exc, tb) = exc_info
         self._exc_info = {'cls':cls, 'exc':exc, 'tb':tb}
-        logger.warning('%s: %s' % (self.typename, self.detail))
+        for loggername, init, call in self._loggers:
+            if init:
+                logger = get_logger(loggername)
+                msg = '%s: %s' % (self.typename, self.detail)
+                if issubclass(exc.__class__, http_exc.HTTPError):
+                    logger.error(msg)
+                elif issubclass(exc.__class__, http_exc.HTTPRedirection) or issubclass(exc.__class__, http_exc.HTTPOk):
+                    logger.info(msg)
+                else:
+                    logger.warn(msg)
 
     def __iter__(self):
         return self._exc_info.__iter__()
@@ -113,9 +116,15 @@ ${_nest_traceback}''')
             return self._exc_info[key]
 
     def __call__(self, environ, start_resp, debug):
-        logger.critical('%s: %s' % (self.typename, self.detail))
-        
         exc = self.exc
+
+        for loggername, init, call in self._loggers:
+            if call:
+                logger = get_logger(loggername)
+                msg = ' ** Responding: %s: %s' % (self.typename, self.detail)
+                if issubclass(exc.__class__, http_exc.HTTPError):
+                    logger.critical(msg)
+        
         if not issubclass(exc.__class__, http_exc.HTTPException):
             exc = http_exc.HTTPInternalServerError()
         
@@ -138,15 +147,17 @@ ${_nest_traceback}''')
         return self._generate_response(environ, repl_start_response, debug,
                         exc.status, exc.explanation, location, exc.headerlist)
 
+    def _get_traceback(self):
+        '''  '''
+        exc = self.exc
+        if not issubclass(exc.__class__, http_exc.HTTPException):
+            exc = http_exc.HTTPInternalServerError()
+        return self._get_body(Request.blank('/').environ, self._templates['plain'], 2,
+                        exc.status, exc.explanation, '...', exc.headerlist)
+    traceback=property(_get_traceback, doc=_get_traceback.__doc__)
+
     def _generate_response(self, environ, start_response, debug,  status,
                         explanation, location, headerlist):
-
-        if not isinstance(debug, int):
-            if debug:
-                debug = 2
-            else:
-                debug = 0
-        assert debug in (0,1,2)
 
         accept = environ.get('HTTP_ACCEPT', '')
         if accept and 'html' in accept or '*/*' in accept:
@@ -187,10 +198,10 @@ ${_nest_traceback}''')
             args[k.lower()] = escape(v)
         t = Template(''.join(explanation))
         args['explanation'] = t.substitute(args)
-        if debug == 0:
-            args['_traceback'] = ''
-        else:
+        if debug:
             args['_traceback'] = self._get_traceback(traceback, escape, debug)
+        else:
+            args['_traceback'] = ''
 
         return template.substitute(args)
 
@@ -198,7 +209,6 @@ ${_nest_traceback}''')
 
         template = temp['template']
         item_template = temp['item']
-        code_template = temp['code']
         nested_template = temp['nested']
 
         args = {
@@ -219,8 +229,6 @@ ${_nest_traceback}''')
             args['line'] = escape(line)
 
             items.append(item_template.substitute(args))
-            if ((debug == 2) and line):
-                items.append(code_template.substitute(args))
 
         args = {
             'exception' : escape(self.typename),
