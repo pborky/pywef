@@ -1,11 +1,10 @@
+import sys
 __author__="pborky"
 __date__ ="$18.2.2010 16:41:24$"
 
 # TODO: refactor - think about how..
 
-from errorhandler import ExcInfo
-from errorhandler import ControllerNotInitializedProperly
-from webob.exc import HTTPException
+from exc import ExcInfoWrapper, NotInitializedProperly, HTTPOk, HTTPRedirection, HTTPError, HTTPInternalServerError
 
 try:
     from worker import FrontControllerWorker
@@ -14,7 +13,7 @@ try:
 except:
     FrontControllerWorker = None
     RoutesMiddleware  = None
-    init_exc_info = ExcInfo()
+    init_exc_info = ExcInfoWrapper()
 
 class FrontController(object):
     """
@@ -23,12 +22,18 @@ class FrontController(object):
     it is root cause and that is showed too.
     """
     
-    def __init__(self, controllers, debug = False, show_debug_code = True):
-        
+    def __init__(self, controllers, debug = 0):
+
+        if isinstance(debug, int):
+            self._debug = debug
+        else:
+            if debug:
+                self._debug = 2
+            else:
+                self._debug = 0
+            
         self._init_exc_info = None
         self._worker = None
-        self._debug = debug
-        self._show_debug_code = show_debug_code
 
         if (FrontControllerWorker == None):
             self._init_exc_info = init_exc_info
@@ -40,29 +45,33 @@ class FrontController(object):
                 else:
                     self._worker = RoutesMiddleware(worker, worker.mapper, singleton = True)
             except:
-                self._init_exc_info = ExcInfo()
+                self._init_exc_info = ExcInfoWrapper()
     
     def __call__(self, environ, start_resp):
-        try:            
-            if (self._worker != None):
-                return self._worker(environ, start_resp)
-            else:
-                raise ControllerNotInitializedProperly('Front controller is missing.',
-                            self._init_exc_info)
+        try:
+            try:
 
-        except HTTPException, exc:
-            #TODO: add cooler responses..
+                if (self._worker != None):
+                    return self._worker(environ, start_resp)
+                else:
+                    raise NotInitializedProperly('Front controller worker is missing.', self._init_exc_info)
+
+            except HTTPOk:
+                raise HTTPInternalServerError('HTTPOk raised but not properly processed.', ExcInfoWrapper())
+
+            except HTTPRedirection:
+                exc_info = ExcInfoWrapper()
+                return exc_info(environ, start_resp, self._debug)
+
+            except HTTPError:
+                exc_info = ExcInfoWrapper()
+                return exc_info(environ, start_resp, self._debug)
             
-            exc_info = ExcInfo()
-            def repl_start_response(status, headers, exc=None):
-                if exc is None:
-                    exc = exc_info.tuple
-                return start_resp(status, headers, exc)
-            return exc(environ, repl_start_response)
-
-        except Exception, exc:
+            except Exception:
+                raise HTTPInternalServerError('Exceptional state detected.', ExcInfoWrapper())
             
-            exc_info = ExcInfo()
 
-            return exc_info(start_resp, self._debug, self._show_debug_code)
+        except HTTPError:
+            exc_info = ExcInfoWrapper()
+            return exc_info(environ, start_resp, self._debug)
 

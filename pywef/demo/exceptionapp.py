@@ -1,7 +1,7 @@
 __author__="peterb"
 __date__ ="$1.3.2010 15:13:43$"
 
-from pywef.errorhandler import ExcInfo
+from pywef.exc import ExcInfoWrapper, HTTPOk, HTTPNotFound
 
 class MyException(Exception):
     pass
@@ -18,4 +18,5 @@ class ExcApp(object):
             context.response.header.append(('Content-Type', 'text/plain'))
             context.response.body.append('Hello world!')
         except:
-            raise Exception('Oh! Somethig gone wrong.', ExcInfo())
+            raise HTTPOk('Oh! Somethig gone wrong.', ExcInfoWrapper())
+            #raise HTTPNotFound('Oh! Somethig gone wrong.', ExcInfoWrapper())

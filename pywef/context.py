@@ -1,10 +1,9 @@
 __author__="pborky"
 __date__ ="$18.2.2010 16:40:48$"
 
-from errorhandler import ExcInfo
+from exc import ExcInfoWrapper, HTTPFound, HTTPInternalServerError
 from webob import Request
 from webob import Response
-from webob.exc import HTTPFound
 from routes.util import GenerationException
 
 class Context(object):
@@ -51,7 +50,7 @@ class Context(object):
             loc = self.url_generator(*args, **kwargs)
             raise HTTPFound('Redirecting to "%s".' % loc, location = loc)
         except GenerationException:
-            raise Exception('Could not redirect. Cannot generate appropiate url.', ExcInfo())
+            raise HTTPInternalServerError('Could not redirect. Cannot generate appropiate url.', ExcInfoWrapper())
 
     def return_response(self):
         """ """

@@ -14,8 +14,7 @@ Monitor().start()
 def favicon(context, **kwargs):
     pass
 
-SERVER_SETUP = {'debug': True,
-                'show_debug_code': True,
+SERVER_SETUP = {'debug': 2,
                 'controllers': {'index': { 'ctrl'  : Hello,
                                            'route' : '/' },
 

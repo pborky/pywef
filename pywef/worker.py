@@ -3,10 +3,8 @@ __date__ ="$1.3.2010 23:44:36$"
 
 from context import Context
 from routes import Mapper
-from errorhandler import ControllerInitializationError
-from errorhandler import ControllerNotInitializedProperly
-from webob.exc import HTTPBadRequest
-from webob.exc import HTTPFound
+from routes.util import RoutesException
+from exc import HTTPNotFound, HTTPFound, NotInitializedProperly, InitializationError
 
 class FrontControllerWorker(object):
     """ Application front controller  processer """
@@ -26,7 +24,7 @@ class FrontControllerWorker(object):
                     ctrl_keys = ctrl.keys()
 
                     if not ('ctrl' in ctrl_keys and 'route' in ctrl_keys):
-                        raise ControllerInitializationError('Arguments "ctrl" and "route" are required.')
+                        raise InitializationError('Arguments "ctrl" and "route" are required.')
 
                     if 'route_vars' in ctrl_keys:
                         route_vars = ctrl['route_vars']
@@ -62,15 +60,18 @@ class FrontControllerWorker(object):
         if (self._controllers == None
                 or len(self._controllers) == 0
                 or self.mapper == None):
-            raise ControllerNotInitializedProperly('Missing controller to execute.')
+            raise NotInitializedProperly('Missing controller to execute.')
         else:
             context = Context(environ=environ, start_response = start_response, worker = self)
-            route = self.mapper.match(environ=environ)
-            if route == None:
-                if not context.request.path_url.endswith('/'):
-                    raise HTTPFound('Trying add trailing slash.', add_slash=True)
-                else:
-                    raise HTTPBadRequest('Requested route %s not found.' % context.request.path_url)
+            try:
+                route = self.mapper.match(environ=environ)
+                if route == None:
+                    if not context.request.path_url.endswith('/'):
+                        raise HTTPFound('Trying add trailing slash.', add_slash=True)
+                    else:
+                        raise HTTPNotFound('Requested route %s cannot be matched.' % context.request.path_url)
+            except RoutesException:
+                raise HTTPNotFound('Requested route %s cannot be matched.' % context.request.path_url, ExcInfoWrapper())
             ctrl = self._controllers[route['controller']]
             # TODO: test if callable and raise ControllerNotInitializedProperly respectively
             ctrl(context, **route)
