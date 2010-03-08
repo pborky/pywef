@@ -8,11 +8,14 @@ from pywef.demo.myapp import MyApp
 from pywef.demo.exceptionapp import ExcApp
 from pywef.demo.helloapp import Hello
 from pywef.monitor import Monitor
+from pywef.logger import set_logger
 
 Monitor().start()
 
 def favicon(context, **kwargs):
     pass
+
+set_logger('pywef', '/home/peterb/workspace/python/wsgi/log/pywef.log')
 
 SERVER_SETUP = {'debug': 2,
                 'controllers': {'index': { 'ctrl'  : Hello,

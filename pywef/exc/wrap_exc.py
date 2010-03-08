@@ -10,7 +10,10 @@ except ImportError:
     from webob.util.stringtemplate import Template
 from webob import Response, Request, html_escape
 from traceback import extract_tb
+from pywef.logger import get_logger
 import http_exc
+
+logger = get_logger('pywef')
 
 def no_escape(value):
     if value is None:
@@ -98,7 +101,7 @@ ${_nest_traceback}''')
         else:
             (cls, exc, tb) = exc_info
         self._exc_info = {'cls':cls, 'exc':exc, 'tb':tb}
-        #self._log_it()
+        logger.warning('%s: %s' % (self.typename, self.detail))
 
     def __iter__(self):
         return self._exc_info.__iter__()
@@ -110,6 +113,8 @@ ${_nest_traceback}''')
             return self._exc_info[key]
 
     def __call__(self, environ, start_resp, debug):
+        logger.critical('%s: %s' % (self.typename, self.detail))
+        
         exc = self.exc
         if not issubclass(exc.__class__, http_exc.HTTPException):
             exc = http_exc.HTTPInternalServerError()

@@ -7,6 +7,9 @@ import signal
 import threading
 import atexit
 import Queue
+from pywef.logger import get_logger
+
+logger = get_logger('pywef')
 
 class Monitor:
     """
@@ -31,8 +34,10 @@ class Monitor:
     def _restart(self, path):
         self._queue.put(True)
         prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
-        print >> sys.stderr, '%s Change detected to \'%s\'.' % (prefix, path)
-        print >> sys.stderr, '%s Triggering process restart.' % prefix
+
+        logger.info('Change detected to \'%s\'.' % path)
+        logger.info('Triggering process restart.')
+        
         os.kill(os.getpid(), signal.SIGINT)
 
     def _modified(self,path):
@@ -117,8 +122,7 @@ class Monitor:
         self._lock.acquire()
         
         if not self._running:
-            prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
-            print >> sys.stderr, '%s Starting change monitor.' % prefix
+            logger.info('Starting change monitor.')
             self._running = True
             self._thread.start()
         

@@ -11,7 +11,7 @@ class ExcApp(object):
 
     def __call__(self, context, move = None, **kwargs):
         if move != None:
-            context.redirect(move)
+            context.redirect(move, **kwargs)
         try:
             raise MyException('Hello world! This is an example exception.')
             context.response.status = 200
