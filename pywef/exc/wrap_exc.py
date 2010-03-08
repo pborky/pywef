@@ -174,7 +174,7 @@ ${_nest_traceback}''')
         if location == None:
             args['location'] = ''
         else:
-            args['location'] = Template('<a href="${location}">${location}</a>').substitute(escape(location))
+            args['location'] = Template('<a href="${location}">${location}</a>').substitute(location=escape(location))
 
         for k, v in environ.items():
             args[k] = escape(v)
