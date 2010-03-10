@@ -62,7 +62,7 @@ class FrontControllerWorker(object):
                 or self.mapper == None):
             raise NotInitializedProperly('Missing controller to execute.')
         else:
-            context = Context(environ=environ, start_response = start_response, worker = self)
+            context = Context(environ=environ, worker = self)
             try:
                 route = self.mapper.match(environ=environ)
                 if route == None:
@@ -76,4 +76,4 @@ class FrontControllerWorker(object):
             # TODO: test if callable and raise ControllerNotInitializedProperly respectively
             ctrl(context, **route)
 
-        return context.return_response()
+        return context.response(environ, start_response) # context.return_response()

@@ -12,14 +12,13 @@ class Context(object):
     wrappers. Application data should be stored here.
     """
 
-    def __init__(self, environ, start_response, worker = None, mapper = None):
+    def __init__(self, environ, worker = None, mapper = None):
         if worker == None and mapper == None:
             raise TypeError("Either 'worker' or 'mapper' must be passed.")
         self._request = Request(environ)
         self._response = None
         self._url_gen = None
         self._worker = worker
-        self._start_response = start_response
         if mapper != None:
             self._mapper = mapper
         else:
@@ -52,6 +51,6 @@ class Context(object):
         except GenerationException:
             raise HTTPInternalServerError('Could not redirect. Cannot generate appropiate url.', ExcInfoWrapper())
 
-    def return_response(self):
+    def return_response(self, start_response):
         """ """
-        return self.response(self.request.environ, self._start_response)
+        return self.response(self.request.environ, start_response)
