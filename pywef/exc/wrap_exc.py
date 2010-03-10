@@ -95,16 +95,8 @@ ${_nest_traceback}''')
         else:
             (cls, exc, tb) = exc_info
         self._exc_info = {'cls':cls, 'exc':exc, 'tb':tb}
-        for loggername, init, call in self._loggers:
-            if init:
-                logger = get_logger(loggername)
-                msg = '%s: %s' % (self.typename, self.detail)
-                if issubclass(exc.__class__, http_exc.HTTPError):
-                    logger.error(msg)
-                elif issubclass(exc.__class__, http_exc.HTTPRedirection) or issubclass(exc.__class__, http_exc.HTTPOk):
-                    logger.info(msg)
-                else:
-                    logger.warn(msg)
+
+        self._write_log('Catching: %s: %s' % (self.typename, self.detail))
 
     def __iter__(self):
         return self._exc_info.__iter__()
@@ -118,34 +110,35 @@ ${_nest_traceback}''')
     def __call__(self, environ, start_resp, debug):
         exc = self.exc
 
-        for loggername, init, call in self._loggers:
-            if call:
-                logger = get_logger(loggername)
-                msg = ' ** Responding: %s: %s' % (self.typename, self.detail)
-                if issubclass(exc.__class__, http_exc.HTTPError):
-                    logger.critical(msg)
+        self._write_log(' ** Responding: %s: %s' % (self.typename, self.detail), call=True)
         
         if not issubclass(exc.__class__, http_exc.HTTPException):
             exc = http_exc.HTTPInternalServerError()
         
-        req = Request(environ)
-        location = exc.location
-        if exc.add_slash:
-            url = req.path
-            url += '/'
-            if req.environ.get('QUERY_STRING'):
-                url += '?' + req.environ['QUERY_STRING']
-            location = url
-        if location != None:
-            location = urlparse.urljoin(req.path_url, location)
-
         def repl_start_response(status, headers, exc=None):
             if exc==None:
                 exc = self.tuple
             return start_resp(status, headers, exc)
 
-        return self._generate_response(environ, repl_start_response, debug,
-                        exc.status, exc.explanation, location, exc.headerlist)
+        return self._generate_response(environ, repl_start_response, debug, exc)
+
+    def _write_log(self, msg, call = False, init = False):
+        # TODO: call and init arguments are very crappy... also self._loggers..
+        exc_cls = self.cls
+        for loggername, init_, call_ in self._loggers:
+            if (call and call_) or (init and init_):
+                logger = get_logger(loggername)
+                if call:
+                    if issubclass(exc_cls, http_exc.HTTPError):
+                        logger.critical(msg)
+                else:
+                    if issubclass(exc_cls, http_exc.HTTPError):
+                        logger.error(msg)
+                    elif issubclass(exc_cls, http_exc.HTTPRedirection) or issubclass(exc_cls, http_exc.HTTPOk):
+                        logger.info(msg)
+                    else:
+                        logger.warn(msg)
+
 
     def _get_traceback(self):
         '''  '''
@@ -156,9 +149,18 @@ ${_nest_traceback}''')
                         exc.status, exc.explanation, '...', exc.headerlist)
     traceback=property(_get_traceback, doc=_get_traceback.__doc__)
 
-    def _generate_response(self, environ, start_response, debug,  status,
-                        explanation, location, headerlist):
-
+    def _generate_response(self, environ, start_response, debug, exc):
+        assert issubclass(exc.__class__, http_exc.HTTPException)
+        req = Request(environ)
+        location = exc.location
+        if exc.add_slash:
+            url = req.path
+            url += '/'
+            if req.environ.get('QUERY_STRING'):
+                url += '?' + req.environ['QUERY_STRING']
+            location = url
+        if location != None:
+            location = urlparse.urljoin(req.path_url, location)
         accept = environ.get('HTTP_ACCEPT', '')
         if accept and 'html' in accept or '*/*' in accept:
             content_type = 'text/html'
@@ -166,11 +168,11 @@ ${_nest_traceback}''')
         else:
             content_type = 'text/plain'
             temp = self._templates['plain']
-        body=self._get_body(environ, temp, debug, status, explanation, location, headerlist)
+        body=self._get_body(environ, temp, debug, exc.status, exc.explanation, location, exc.headerlist)
         resp = Response(\
             body=body,
-            status=status,
-            headerlist=headerlist,
+            status=exc.status,
+            headerlist=exc.headerlist,
             content_type=content_type,
             location=location
         )

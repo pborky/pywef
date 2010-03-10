@@ -32,6 +32,7 @@ class FrontController(object):
         
         self._init_exc_info = None
         self._worker = None
+        # TODO: following is shit...
         #try:
         if loggers != None:
             for name, data in loggers.items():
