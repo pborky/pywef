@@ -9,6 +9,7 @@ import atexit
 import Queue
 from pywef.logger import get_logger
 
+# TODO: fix this magic, eg. by dependency injection like in ExcInfoWrapper
 logger = get_logger('default')
 
 class Monitor:
@@ -33,7 +34,6 @@ class Monitor:
 
     def _restart(self, path):
         self._queue.put(True)
-        prefix = '[%s (pid=%d)]:' % (self.__class__.__name__ ,os.getpid())
 
         logger.info('Change detected to \'%s\'.' % path)
         logger.info('Triggering process restart.')

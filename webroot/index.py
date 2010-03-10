@@ -22,7 +22,7 @@ SERVER_SETUP = {'debug': True,
                             'call': True,
                             'init': True },
                         'file': {
-                            'name':'/home/peterb/workspace/python/wsgi/log/pywef.log',
+                            'name':'/tmp/pywef/log/pywef_app.log',
                             'size':5000000,
                             'count':5 } } },
 
