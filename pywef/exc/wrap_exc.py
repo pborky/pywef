@@ -32,6 +32,8 @@ ${explanation}
 
 ${exception}: ${detail}
 ${_traceback}''')
+    plain_url_template = Template('''\
+"${location}"''')
     plain_tb = Template('''\
   Traceback:
 ${_items}
@@ -56,6 +58,8 @@ ${_nest_traceback}''')
   ${_traceback}
  </body>
 </html>''')
+    html_url_template = Template('''\
+<a href=${location}>${location}</a>''')
     html_tb = Template('''\
 <p><code>Traceback:</code><br/>
 ${_items}
@@ -75,6 +79,7 @@ ${_nest_traceback}''')
         'html' : {
             'escape' : html_escape,
             'template' : html_template,
+            'url_template' : html_url_template,
             'traceback' : {
                 'template' : html_tb,
                 'item' : html_tb_item,
@@ -82,6 +87,7 @@ ${_nest_traceback}''')
         'plain' : {
             'escape' : no_escape,
             'template' : plain_template,
+            'url_template' : plain_url_template,
             'traceback' : {
                 'template' : plain_tb,
                 'item' : plain_tb_item,
@@ -95,15 +101,16 @@ ${_nest_traceback}''')
         else:
             (cls, exc, tb) = exc_info
         self._exc_info = {'cls':cls, 'exc':exc, 'tb':tb}
+        self._tuple = (cls, exc, tb)
 
-        self._write_log('Catching: %s: %s' % (self.typename, self.detail))
+        self._write_log('Catching: %s: %s' % (self.typename, self.detail), init=True)
 
     def __iter__(self):
         return self._exc_info.__iter__()
 
     def __getitem__(self, key):
         if (isinstance(key, int)):
-            return self._exc_info[self._exc_info.keys()[key]]
+            return self._tuple[key]
         else:
             return self._exc_info[key]
 
@@ -146,7 +153,7 @@ ${_nest_traceback}''')
         if not issubclass(exc.__class__, http_exc.HTTPException):
             exc = http_exc.HTTPInternalServerError()
         return self._get_body(Request.blank('/').environ, self._templates['plain'], 2,
-                        exc.status, exc.explanation, '...', exc.headerlist)
+                        exc.status, exc.explanation, '?', exc.headerlist)
     traceback=property(_get_traceback, doc=_get_traceback.__doc__)
 
     def _generate_response(self, environ, start_response, debug, exc):
@@ -181,6 +188,7 @@ ${_nest_traceback}''')
     def _get_body(self, environ, temp, debug, status, explanation, location, headerlist):
         escape = temp['escape']
         template = temp['template']
+        url_template = temp['url_template']
         traceback = temp['traceback']
 
         args = {
@@ -192,7 +200,7 @@ ${_nest_traceback}''')
         if location == None:
             args['location'] = ''
         else:
-            args['location'] = Template('<a href="${location}">${location}</a>').substitute(location=escape(location))
+            args['location'] = url_template.substitute(location=escape(location))
 
         for k, v in environ.items():
             args[k] = escape(v)
@@ -254,7 +262,7 @@ ${_nest_traceback}''')
 
     def _get_tuple(self):
         '''  '''
-        return tuple(self)
+        return self._tuple
     tuple = property(_get_tuple, doc = _get_tuple.__doc__)
 
     def _get_cls(self):
