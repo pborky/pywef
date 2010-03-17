@@ -15,12 +15,12 @@ class SendApp(object):
 
         self.counter += 1
         res.body_file.write('<p>Request number: %s </p>' % self.counter)
-        res.body_file.write("""<FORM method="post" action="wsgitest">
+        res.body_file.write("""<FORM method="post" action="%s">
             <P>
             Name: <INPUT type="text" name="name"></br>
             Last: <INPUT type="text" name="last"></br>
             <INPUT type="radio" name="sex" value="Male"> Male</br>
             <INPUT type="radio" name="sex" value="Female"> Female</br>
             <INPUT type="submit" value="Send"></P>
-            </FORM>""")
+            </FORM>""" % context.url_generator('wsgitest'))
 

@@ -10,7 +10,6 @@ except ImportError:
     from webob.util.stringtemplate import Template
 from webob import Response, Request, html_escape
 from traceback import extract_tb
-from pywef.logger import get_logger
 import http_exc
 
 def no_escape(value):
@@ -132,9 +131,8 @@ ${_nest_traceback}''')
     def _write_log(self, msg, call = False, init = False):
         # TODO: call and init arguments are very crappy... also self._loggers..
         exc_cls = self.cls
-        for loggername, init_, call_ in self._loggers:
+        for logger, init_, call_ in self._loggers:
             if (call and call_) or (init and init_):
-                logger = get_logger(loggername)
                 if call:
                     if issubclass(exc_cls, http_exc.HTTPError):
                         logger.critical(msg)

@@ -7,18 +7,30 @@ import signal
 import threading
 import atexit
 import Queue
-from pywef.logger import get_logger
 
-# TODO: fix this magic, eg. by dependency injection like in ExcInfoWrapper
-logger = get_logger('default')
+class DummyLogger(object):
+    def write(self, msg):
+        print >> sys.stderr,  '\n%s' % msg
 
-class Monitor:
+    def debug(self, msg):
+        self.write('DEBUG: %s' % msg)
+
+    def info(self, msg):
+        self.write('INFO: %s' % msg)
+
+    def warn(self, msg):
+        self.write('WARN: %s' % msg)
+
+    def error(self, msg):
+        self.write('ERROR: %s' % msg)
+
+class Monitor(object):
     """
     Class monitoring loaded modules and additional files for modification.
     Interpreter process is restarted in case of change detection.
     """
     
-    def __init__(self):
+    def __init__(self, restart = None, reload = None, logger = None, force_restart = True, sig = None):
         self._interval = 1.0
         self._times = {}
         self._files = []
@@ -32,13 +44,46 @@ class Monitor:
         self._thread = threading.Thread(target=self._monitor)
         self._thread.setDaemon(True)
 
-    def _restart(self, path):
-        self._queue.put(True)
+        if sig is None:
+            self._signal = signal.SIGTERM
+        else:
+            self._signal = sig
 
-        logger.info('Change detected to \'%s\'.' % path)
-        logger.info('Triggering process restart.')
+        if logger is None:
+            self._logger = DummyLogger()
+        else:
+            self._logger = logger
         
-        os.kill(os.getpid(), signal.SIGINT)
+        if restart is None:
+            self._do_restart = self._restart
+        else:
+            self._do_restart = restart
+        
+        if reload is None:
+            if force_restart:
+                self._do_reload = self._restart
+            else:
+                self._do_reload = self._reload
+        else:
+            if force_restart:
+                raise TypeError('If \'force_restart\' is given \'reload\' argument must be None.')
+            self._do_reload = reload
+
+    def _restart(self, **kw):
+        self._queue.put(True)
+        self._logger.info('Triggering process restart.')
+        os.kill(os.getpid(), self._signal)
+
+    def _reload(self, module = None, module_name = None, **kw):
+        if module is not None:
+            if module_name is not None:
+                raise TypeError('You must pass either \'module\' or \'module_name\' argument.')
+            self._logger.info('Triggering module reload.')
+            reload(module)
+        else:
+            if module_name is None:
+                raise TypeError('You must pass either \'module\' or \'module_name\' argument.')
+            return
 
     def _modified(self,path):
         try:
@@ -63,6 +108,7 @@ class Monitor:
             # has been restored.
 
             if mtime != self._times[path]:
+                self._times[path] = mtime
                 return True
         except:
             # If any exception occured, likely that file has been
@@ -85,14 +131,17 @@ class Monitor:
                 if os.path.splitext(path)[1] in ['.pyc', '.pyo', '.pyd']:
                     path = path[:-1]
                 if self._modified(path):
-                    return self._restart(path)
+                    self._logger.info('Change detected to \'%s\'.' % path)
+                    self._do_reload(module=module)
+
 
             # Check modification times on files which have
             # specifically been registered for monitoring.
 
             for path in self._files:
                 if self._modified(path):
-                    return self._restart(path)
+                    self._logger.info('Change detected to \'%s\'.' % path)
+                    self._do_restart()
 
             # Go to sleep for specified interval.
 
@@ -111,7 +160,7 @@ class Monitor:
     def track(self, path):
         """ Add additional file to track """
 
-        if not path in _files:
+        if not path in self._files:
             self._files.append(path)
 
     def start(self, interval=1.0):
@@ -122,7 +171,7 @@ class Monitor:
         self._lock.acquire()
         
         if not self._running:
-            logger.info('Starting change monitor.')
+            self._logger.info('Starting change monitor.')
             self._running = True
             self._thread.start()
         

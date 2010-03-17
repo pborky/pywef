@@ -5,7 +5,8 @@ __date__ ="$18.2.2010 16:41:24$"
 # TODO: refactor - think about how..
 
 from exc import ExcInfoWrapper, NotInitializedProperly, HTTPOk, HTTPRedirection, HTTPError, HTTPInternalServerError
-from pywef.logger import set_logger
+from pywef.logger import set_logger, get_logger
+from pywef.monitor import Monitor
 
 try:
     from worker import FrontControllerWorker
@@ -23,29 +24,44 @@ class FrontController(object):
     it is root cause and that is showed too.
     """
     
-    def __init__(self, controllers, debug = None, loggers = None):
+    def __init__(self, controllers, **kw):
 
-        if debug == None:
-            self._debug = False
-        else:
-            self._debug = debug
+        self._debug = kw.get('debug', False)
         
         self._init_exc_info = None
         self._worker = None
         # TODO: following is shit...
         #try:
-        if loggers != None:
-            for name, data in loggers.items():
+        if kw.has_key('loggers'):
+            for name, data in kw.get('loggers').items():
                 exc = data.get('exc')
                 if exc != None:
                     init = exc.get('init', False)
                     call = exc.get('call', False)
-                    ExcInfoWrapper._loggers.append((name, init, call))
+                   
                 file = data.get('file')
                 fname = file.get('name')
                 size = file.get('size')
                 count = file.get('count')
                 set_logger(name, fname, max_bytes = size, backup_count = count)
+        
+        if kw.has_key('exc_wrapper'):
+            exc_wrapper = kw.get('exc_wrapper')
+            logger = get_logger(exc_wrapper.get('logger'))
+            init = exc_wrapper.get('init')
+            call = exc_wrapper.get('call')
+            ExcInfoWrapper._loggers.append((logger, init, call))
+
+        if kw.has_key('monitor'):
+            monitor = kw.get('monitor')
+            logger = get_logger(monitor.get('logger'))
+            force_restart = monitor.get('force_restart', True)
+            self._monitor = Monitor(logger=logger, force_restart=force_restart)
+            for i in monitor.get('track_files', []):
+                self._monitor.track(i)
+            self._monitor.start()
+        
+        
         #except:
         #    self._init_exc_info = ExcInfoWrapper()
 
