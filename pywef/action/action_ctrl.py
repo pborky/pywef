@@ -80,13 +80,16 @@ class ActionController(object):
 
     def __call__(self, context, **kwargs):
         action = kwargs.get('action', None)
-        if action == None:
-            (action, template) = self._action
+        
+        if action is None:
+            action = self._action
         else:
-            (action, template) = self._actions.get(action, self._action)
+            action = self._actions.get(action, self._action)
+        
+        if action is None:
+            raise HTTPBadRequest('Appropiate action was not found.')
 
-        if (action is None):
-            raise HTTPBadRequest('The action was not specified.')
+        (action, template) =  action
 
         context.action_data = {}
         
