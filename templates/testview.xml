@@ -8,7 +8,7 @@
     <h1>This is test</h1>
     <p>
     <a href="<?python = url_generator('index') # ?>">home</a>&nbsp;&nbsp;
-    <a href="<?python = url_generator('hello') # ?>">greeting</a>&nbsp;&nbsp;
+    <!--<a href="<?python = url_generator('hello') # ?>">greeting</a>&nbsp;&nbsp;-->
     <?python if val > first: ?>
         <a href="<?python = url_generator('main',action='test',data=first) # ?>">first</a>&nbsp;&nbsp;
         <a href="<?python = url_generator('main',action='test',data=str(val-1)) # ?>">previous</a>&nbsp;&nbsp;

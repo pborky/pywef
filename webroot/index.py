@@ -47,7 +47,9 @@ SERVER_SETUP = {
                 'templates_dir': '/home/pborky/Projects/python/pywef/src/templates',
                 'templates': {
                     'test': 'testview.xml' } },
-            'route': '/do/{action}/{data}' } } }
+            'route': '/do/test/{data}',
+            'route_vars': {
+                'action': 'test' } } } }
 
 application = FrontController(**SERVER_SETUP)
 

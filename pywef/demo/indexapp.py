@@ -27,7 +27,7 @@ class Index(object):
 <h1>Hello %s!</h1>
 <p>
 <a href="%s">home</a>&nbsp;&nbsp;
-<a href="%s">greeting</a>&nbsp;&nbsp;
+<!--<a href="%s">greeting</a>&nbsp;&nbsp;-->
 <a href="%s">first</a>&nbsp;&nbsp;
 previous&nbsp;&nbsp;
 next&nbsp;&nbsp;
