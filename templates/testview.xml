@@ -2,23 +2,32 @@
 
 <?python first = 1 # ?>
 <?python # ?>
+<?python last = 500000 # ?>
+<?python # ?>
 <body>
     <h1>This is test</h1>
     <p>
     <a href="<?python = url_generator('index') # ?>">home</a>&nbsp;&nbsp;
     <a href="<?python = url_generator('hello') # ?>">greeting</a>&nbsp;&nbsp;
-    <a href="<?python = url_generator('main',action='test',data=first) # ?>">first</a>&nbsp;&nbsp;
     <?python if val > first: ?>
+        <a href="<?python = url_generator('main',action='test',data=first) # ?>">first</a>&nbsp;&nbsp;
         <a href="<?python = url_generator('main',action='test',data=str(val-1)) # ?>">previous</a>&nbsp;&nbsp;
     <?python % else: ?>
+        first&nbsp;&nbsp;
         previous&nbsp;&nbsp;
     <?python # ?>
-    <a href="<?python = url_generator('main',action='test',data=str(val+1)) # ?>">next</a>
+    <?python if val < last: ?>
+        <a href="<?python = url_generator('main',action='test',data=str(val+1)) # ?>">next</a>&nbsp;&nbsp;
+        <a href="<?python = url_generator('main',action='test',data=last) # ?>">last</a>&nbsp;&nbsp;
+    <?python % else: ?>
+        next&nbsp;&nbsp;
+        last&nbsp;&nbsp;
+    <?python # ?>
     </p>
     <p>Value passed to <code><?python = name # ?></code> is <code><?python = val # ?></code>.</p>
 
-    <?python if val <= 100: ?>
-        <code><?python = val # ?></code> is bit small..
+    <?python if val <= 10: ?>
+        <code><?python = val # ?></code> is small..
     <?python % else: ?>
         <?python if val <=1000 : ?>
             <code><?python = val # ?></code> is big enough..

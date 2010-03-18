@@ -30,13 +30,15 @@ class Index(object):
 <a href="%s">greeting</a>&nbsp;&nbsp;
 <a href="%s">first</a>&nbsp;&nbsp;
 previous&nbsp;&nbsp;
-next
+next&nbsp;&nbsp;
+<a href="%s">last</a>&nbsp;&nbsp;
 </p>
 <p>Here be %d %s soon.</p>''' % (\
             who,\
             context.url_generator('index'),\
             context.url_generator('hello'),\
             context.url_generator('main',action='test',data=1), \
+            context.url_generator('main',action='test',data=500000), \
             self.count, \
             monster)
         )
