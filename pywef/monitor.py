@@ -1,3 +1,4 @@
+import os.path
 __author__="pborky"
 __date__ ="$22.2.2010 3:22:45$"
 
@@ -160,8 +161,18 @@ class Monitor(object):
     def track(self, path):
         """ Add additional file to track """
 
-        if not path in self._files:
-            self._files.append(path)
+        if os.path.isdir(path):
+            os.path.walk(path, self._add_file, None)
+        else:
+            if not path in self._files:
+                self._files.append(path)
+
+    def _add_file(self, arg, dirname, names):
+        for name in names:
+            path = '%s%s' % (dirname, name)
+            if not path in self._files:
+                self._logger.info('Tracking file: "%s".' % path)
+                self._files.append(path)
 
     def start(self, interval=1.0):
         """ Start monitoring """

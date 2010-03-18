@@ -112,8 +112,8 @@ ${_nest_traceback}''')
             return self._tuple[key]
         else:
             return self._exc_info[key]
-
-    def __call__(self, environ, start_resp, debug):
+    
+    def __call__(self, environ, start_resp, debug = False):
         exc = self.exc
 
         self._write_log(' ** Responding: %s: %s' % (self.typename, self.detail), call=True)
