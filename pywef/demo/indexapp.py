@@ -35,10 +35,10 @@ next&nbsp;&nbsp;
 </p>
 <p>Here be %d %s soon.</p>''' % (\
             who,\
-            context.url_generator('index'),\
-            context.url_generator('hello'),\
-            context.url_generator('main',action='test',data=1), \
-            context.url_generator('main',action='test',data=500000), \
+            context.url('index'),\
+            context.url('hello'),\
+            context.url('main',action='test',data=1), \
+            context.url('main',action='test',data=500000), \
             self.count, \
             monster)
         )

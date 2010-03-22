@@ -1,19 +1,23 @@
 __author__="pborky"
 __date__ ="$Mar 8, 2010 10:45:11 PM$"
 
-from view_parser import Parser
-from pywef.exc import HTTPBadRequest
+from pywef.exc import HTTPBadRequest, HTTPInternalServerError, NotInitializedProperly
 import os
 import os.path
+from pywef.logger import get_logger
 
-class Template(object):
+log = get_logger('pywef.action')
+
+class TemplateFile(object):
     ''' Helper class for handling teplates. '''
 
-    def __init__(self, filename):
+    def __init__(self, filename, parser_cls):
         if not (os.path.exists(filename) or os.access(filename, 'r')):
             raise IOError('File \'%s\' does not exist or wrong permissions.' % filename)
         self._filename = filename
         self._lines = None
+        self._parser = None
+        self._parser_cls = parser_cls
 
     def __repr__(self):
         return '<%s> [%s]' % (self.__class__.__name__, self._filename)
@@ -53,21 +57,29 @@ class Template(object):
         return ''.join(self._lines)
     content = property(_get_content, doc=_get_content.__doc__)
 
+    def _get_parser(self):
+        ''' Return template object. '''
+        if self._parser is None:
+            self._parser = self._parser_cls(self.content)
+        return self._parser
+    parser = property(_get_parser, doc=_get_parser.__doc__)
 
 class ActionController(object):
     ''' '''
 
-    def __init__(self, actions, templates, templates_dir, **kwargs):
+    def __init__(self, actions, templates, templates_dir, parser_cls, **kwargs):
         self._actions = {}
         self._templates = {}
 
         for (key, template) in templates.items():
-            template_name = '%s/%s' % (templates_dir, template)
-            self._templates[key] = Template(template_name)
+            self._templates[key] = TemplateFile(os.path.join(templates_dir, template), parser_cls)
 
         for (key, action) in actions.items():
             (action, template) = action
-            template = self._templates[template]
+            try:
+                template = self._templates[template]
+            except KeyError:
+                raise NotInitializedProperly('Template \'%s\' not defined.' % template, exc_info = True)
             self._actions[key] = (action(**kwargs), template)
 
         default_action = kwargs.get('default_action', None)
@@ -78,8 +90,8 @@ class ActionController(object):
         else:
             self._action=None
 
-    def __call__(self, context, **kwargs):
-        action = kwargs.get('action', None)
+    def __call__(self, context):
+        action = context.match_dict.get('action', None)
         
         if action is None:
             action = self._action
@@ -90,28 +102,16 @@ class ActionController(object):
             raise HTTPBadRequest('Appropiate action was not found.')
 
         (action, template) =  action
-
-        context.action_data = {}
         
         params =context.request.params
-        callback = None
-        if params.has_key('callback'):
-            callback = params.getone('callback')
-        elif kwargs.has_key('callback'):
-            callback = kwargs.get('callback')
+        executor = context.match_dict.get('callback', params.get('callback', 'execute') )
+        try:
+            executor = action.__getattribute__(executor) # TODO: check if callable
+        except AttributeError:
+            raise HTTPInternalServerError('Action %s is not providing proper executor.' % action.__class__, exc_info = True)
 
-        if callback == None:
-            action.execute(context, **kwargs)
-        else:
-            try:
-                callback = action.__getattribute__(callback)
-            except AttributeError:
-                callback = action.execute
-            callback(context, **kwargs)
-
-        globals = context.action_data.copy()
-        globals['context'] = context
-        globals['request'] = context.request
-        globals['url_generator'] = context.url_generator
+        executor(context)
         
-        context.response.body = Parser.parse(template, globals)
+        stream = template.parser.generate(**context.data)
+        
+        context.response.body = stream.render()

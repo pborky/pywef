@@ -11,6 +11,9 @@ except ImportError:
 from webob import Response, Request, html_escape
 from traceback import extract_tb
 import http_exc
+from pywef.logger import get_logger
+
+log = get_logger('pywef.exc')
 
 def no_escape(value):
     if value is None:
@@ -92,7 +95,7 @@ ${_nest_traceback}''')
                 'item' : plain_tb_item,
                 'nested' : plain_tb_nested } } }
 
-    _loggers = []
+    _logging = {'init': True, 'call': True}
 
     def __init__(self, exc_info = None):
         if exc_info == None:
@@ -131,18 +134,17 @@ ${_nest_traceback}''')
     def _write_log(self, msg, call = False, init = False):
         # TODO: call and init arguments are very crappy... also self._loggers..
         exc_cls = self.cls
-        for logger, init_, call_ in self._loggers:
-            if (call and call_) or (init and init_):
-                if call:
-                    if issubclass(exc_cls, http_exc.HTTPError):
-                        logger.critical(msg)
+        if (call and self._logging['call']) or (init and self._logging['init']):
+            if call:
+                if issubclass(exc_cls, http_exc.HTTPError):
+                    log.critical(msg)
+            else:
+                if issubclass(exc_cls, http_exc.HTTPError):
+                    log.error(msg)
+                elif issubclass(exc_cls, http_exc.HTTPRedirection) or issubclass(exc_cls, http_exc.HTTPOk):
+                    log.info(msg)
                 else:
-                    if issubclass(exc_cls, http_exc.HTTPError):
-                        logger.error(msg)
-                    elif issubclass(exc_cls, http_exc.HTTPRedirection) or issubclass(exc_cls, http_exc.HTTPOk):
-                        logger.info(msg)
-                    else:
-                        logger.warn(msg)
+                    log.warn(msg)
 
 
     def _get_traceback(self):

@@ -3,8 +3,11 @@ __date__ ="$1.3.2010 23:44:36$"
 
 from context import Context
 from routes import Mapper
-from routes.util import RoutesException
+from routes.util import RoutesException, URLGenerator
 from exc import HTTPNotFound, HTTPFound, NotInitializedProperly, InitializationError
+from logger import get_logger
+
+log = get_logger('pywef')
 
 class FrontControllerWorker(object):
     """ Application front controller  processer """
@@ -62,18 +65,29 @@ class FrontControllerWorker(object):
                 or self.mapper == None):
             raise NotInitializedProperly('Missing controller to execute.')
         else:
-            context = Context(environ=environ, worker = self)
+
+            context = Context(environ=environ, worker = self, match_callback = self.mapper.routematch,
+                            generator_callback = URLGenerator(self.mapper, environ))
             try:
-                route = self.mapper.match(environ=environ)
-                if route == None:
-                    if not context.request.path_url.endswith('/'):
-                        raise HTTPFound('Trying add trailing slash.', add_slash=True)
+                context.match()
+                if context.match_dict is None:
+                    req = context.request.copy()
+                    if req.path_info.endswith('/'):
+                        req.path_info = req.path_info.rstrip('/')
+                        route = context.matcher(environ=req.environ)
+                    else:
+                        req.path_info = req.path_info + '/'
+                        route = context.matcher(environ=req.environ)
+                    
+                    if route is not None:
+                        raise HTTPFound('Try add/remove trailing slash.', location = req.url)
                     else:
                         raise HTTPNotFound('Requested route %s cannot be matched.' % context.request.path_url)
+            
             except RoutesException:
-                raise HTTPNotFound('Requested route %s cannot be matched.' % context.request.path_url, ExcInfoWrapper())
-            ctrl = self._controllers[route['controller']]
+                raise HTTPNotFound('Requested route %s cannot be matched.' % context.request.path_url, exc_info = True)
+            ctrl = self._controllers.get(context.match_dict.get('controller'))
             # TODO: test if callable and raise ControllerNotInitializedProperly respectively
-            ctrl(context, **route)
+            ctrl(context)
 
         return context.response(environ, start_response) # context.return_response()

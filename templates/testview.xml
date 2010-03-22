@@ -1,49 +1,46 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?python first = 1 # ?>
-<?python # ?>
-<?python last = 500000 # ?>
-<?python # ?>
-<body>
-    <h1>This is test</h1>
-    <p>
-    <a href="<?python = url_generator('index') # ?>">home</a>&nbsp;&nbsp;
-    <!--<a href="<?python = url_generator('hello') # ?>">greeting</a>&nbsp;&nbsp;-->
-    <?python if val > first: ?>
-        <a href="<?python = url_generator('main',action='test',data=first) # ?>">first</a>&nbsp;&nbsp;
-        <a href="<?python = url_generator('main',action='test',data=str(val-1)) # ?>">previous</a>&nbsp;&nbsp;
-    <?python % else: ?>
-        first&nbsp;&nbsp;
-        previous&nbsp;&nbsp;
-    <?python # ?>
-    <?python if val < last: ?>
-        <a href="<?python = url_generator('main',action='test',data=str(val+1)) # ?>">next</a>&nbsp;&nbsp;
-        <a href="<?python = url_generator('main',action='test',data=last) # ?>">last</a>&nbsp;&nbsp;
-    <?python % else: ?>
-        next&nbsp;&nbsp;
-        last&nbsp;&nbsp;
-    <?python # ?>
-    </p>
-    <p>Value passed to <code><?python = name # ?></code> is <code><?python = val # ?></code>.</p>
-
-    <?python if val <= 10: ?>
-        <code><?python = val # ?></code> is small..
-    <?python % else: ?>
-        <?python if val <=1000 : ?>
-            <code><?python = val # ?></code> is big enough..
-        <?python % else: ?>
-            <code><?python = val # ?></code> is huge..
-        <?python # ?>
-    <?python # ?>
-    <br/>
-
-    <?python if val<100000: ?>
-        <br/>
-        <code>for i in range(1,<?python = val # ?>):</code>
-        <br/>
-        <?python for i in range(1,val): ?>
-            <code>Value of i=<?python = i # ?>.</code>
-            <br/>
-        <?python # ?>
-    <?python # ?>
-</body>
+<html xmlns:py="http://genshi.edgewall.org/">
+  <head>
+    <title py:content="title">This is replaced.</title>
+  </head>
+  <body>
+        <h1 py:content="title">Some fucked up thing</h1>
+        <p>
+            <py:def function="link(name,route = None)">
+                <?python href = urls[name] ?>
+                <py:choose test="href">
+                    <py:when test="None">${name}&nbsp;&nbsp;</py:when>
+                    <py:otherwise>
+                        <a href="${href}">${name}</a>&nbsp;&nbsp;
+                    </py:otherwise>
+                </py:choose>
+            </py:def>
+            ${link('home')} ${link('first')} ${link('previous')} ${link('next')} ${link('last')}
+        </p>
+        <py:if test="show">
+            <p>
+                Value passed to <code>${name}</code> is <code>${val}</code>.
+            </p>
+            <p>
+                <code>$val</code> is
+                <py:choose test="">
+                    <py:when test="val > 100">huge</py:when>
+                    <py:when test="val > 10">big enough</py:when>
+                    <py:otherwise>small</py:otherwise>
+                </py:choose>
+                ...
+            </p>
+            <py:if test="100000 > val">
+                <p>
+                    <code>for i in range(1,$val):</code>
+                </p>
+                <p>
+                    <code>
+                        <span py:for="i in range(1,val)">
+                            i = $i<br/>
+                        </span>
+                    </code>
+                </p>
+            </py:if>
+       </py:if>
+  </body>
+</html>

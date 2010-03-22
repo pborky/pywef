@@ -2,54 +2,56 @@ __author__="pborky"
 __date__ ="$19.2.2010 0:21:07$"
 
 from pywef import FrontController, ActionController
-from pywef.demo.helloapp import Hello
-from pywef.demo.indexapp import Index
 from pywef.demo.testaction import TestAction
-
+from genshi.template import MarkupTemplate
 
 SERVER_SETUP = {
     'debug': True,
 
     'loggers': {
-        'default':{
+        'pywef':{
             'file': {
                 'name':'/tmp/pywef/log/pywef_app.log',
                 'size':5000000,
                 'count':5 } } },
 
     'monitor': {
-        'logger': 'default',
         'force_restart': True,
-        'track_files': ( '/tmp/test', '/home/pborky/Projects/python/pywef/src/templates/') },
+        'track_files': ( '/tmp/test', '/home/peterb/workspace/python/wsgi/src/templates') },
 
     'exc_wrapper': {
-        'logger': 'default',
         'call': True,
         'init': True },
 
     'controllers': {
         'index': {
-            'ctrl': Index,
+            'ctrl': ActionController,
             'ctrl_vars': {
-                'count': 25 },
+                'actions': {
+                    'test': (TestAction, 'test_template') },
+                'templates_dir': '/home/peterb/workspace/python/wsgi/src/templates',
+                'templates': {
+                    'test_template': 'testview.xml' },
+                'parser_cls': MarkupTemplate } ,
             'route': '/',
             'route_vars': {
-                'who': 'World',
-                'monster': 'dragons' } },
-        'hello': {
-            'ctrl': Hello,
-            'route': '/hello' },
+                'action': 'test',
+                'callback': 'execute',
+                'data': 0,
+                'title': 'Hello World!'} },
         'main': {
             'ctrl': ActionController,
             'ctrl_vars': {
                 'actions': {
-                    'test': (TestAction, 'test') },
-                'templates_dir': '/home/pborky/Projects/python/pywef/src/templates',
+                    'test': (TestAction, 'test_template') },
+                'templates_dir': '/home/peterb/workspace/python/wsgi/src/templates',
                 'templates': {
-                    'test': 'testview.xml' } },
+                    'test_template': 'testview.xml' },
+                'parser_cls': MarkupTemplate } ,
             'route': '/do/test/{data}',
             'route_vars': {
-                'action': 'test' } } } }
+                'action': 'test',
+                'callback': 'execute'} } } }
 
 application = FrontController(**SERVER_SETUP)
 
