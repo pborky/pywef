@@ -103,8 +103,7 @@ class ActionController(object):
 
         (action, template) =  action
         
-        params =context.request.params
-        executor = context.match_dict.get('callback', params.get('callback', 'execute') )
+        executor =context.request.params.get('callback', context.match_dict.get('callback', 'execute') )
         try:
             executor = action.__getattribute__(executor) # TODO: check if callable
         except AttributeError:

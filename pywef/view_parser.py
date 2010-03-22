@@ -1,208 +1,135 @@
-'''
-Grammar:
+''' based on Yet Another Python Templating Utility, Version 1.2  '''
 
-<blocks> ::= <block> | <block> <blocks>
-<block> ::= <special-block> | <plain-block>
-<special-block> ::= <opening-bracket> <code-block> <closing-bracket>
+import re
+from pywef.logger import get_logger
+logger = get_logger('default')
 
-<code-block> ::= <expression-block> | <enclosed-statement-block> | <unenclosed-statement-block> | <enclosure-block>
+# utility stuff to avoid tests in the mainline code
+class _Nevermatch:
+    "Polymorphic with a regex that never matches"
+    def match(self, line):
+        return None
+_never = _Nevermatch()     # one reusable instance of it suffices
+def identity(string, why):
+    "A do-nothing-special-to-the-input, just-return-it function"
+    return string
+def nohandle(string):
+    "A do-nothing handler that just re-raises the exception"
+    raise
 
-<expression-block> ::= <opt-whitespace> <evaluator> <python-expression> <enclosure> <opt-whitespace>
-<enclosed-statement-block> ::= <whitespace> <python-statements> <enclosure> <opt-whitespace>
-<unenclosed-statement-block> ::= <whitespace> <python-statements>
-<enclosure-block> ::= <opt-whitespace> <enclosure> <opt-whitespace>
+# and now the real thing
+class Parser(object):
+    "Smart-copier (YAPTU) class"
 
-<opt-whitespace> ::= <whitespace> <opt-whitespace> | <empty-string>
+    def _parse_block(self, i=0, last=None):
+        "Main copy method: process lines [i,last) of block"
 
-<opening-bracket> ::= '<?python'
-<closing-bracket> ::= '?>'
-<whitespace> ::= " " | "\t" | "\r" | "\r\n" | "\n"   <!-- white space character, e.g. space, tab, ..  -->
-<empty-string> ::= "" <!-- "" is empty string, i.e. no whitespace -->
-<enclosure> ::= '#'
-<evaluator> ::= '='
+        out = []
 
-<python-expression> ::= <!-- see python guide (will be passed to eval()) -->
-<python-statements> ::= <!-- see python guide (will be passed to exec ) -->
+        def repl(match, self=self):
+            "return the eval of a found expression, for replacement"
+            expr = self.preproc(match.group(1), 'eval')
+            try: val = str(eval(expr, self.globals, self.locals))
+            except: val = str(self.handle(expr))
+            #logger.debug('Evaluating "%s" = "%s".'% (expr, val))
+            return val
 
+        block = self.locals['_bl']
+        if last is None: last = len(block)
+        while i<last:
+            line = block[i]
+            match = self.restat.match(line)
+            if match:   # a statement starts "here" (at line block[i])
+                # i is the last line to _not_ process
+                stat = match.group(1).strip()
+                j=i+1   # look for 'finish' from here onwards
+                nest=1  # count nesting levels of statements
+                while j<last:
+                    line = block[j]
+                    # first look for nested statements or 'finish' lines
+                    if self.restend.match(line):    # found a statement-end
+                        nest = nest - 1     # update (decrease) nesting
+                        if nest==0: break   # j is first line to _not_ process
+                    elif self.restat.match(line):   # found a nested statement
+                        nest = nest + 1     # update (increase) nesting
+                    elif nest==1:   # look for continuation only at this nesting
+                        match = self.recont.match(line)
+                        if match:                   # found a contin.-statement
+                            nestat = match.group(1).strip()
+                            stat = '%s _out+=_cb(%s,%s)\n%s' % (stat,i+1,j,nestat)
+                            i=j     # again, i is the last line to _not_ process
+                    j=j+1
+                stat = self.preproc(stat, 'exec')
+                stat = '%s _out+=_cb(%s,%s)' % (stat,i+1,j)
+                stat = '_out=""\n%s' % stat
+                #logger.debug('Executing "%s".'% stat)
+                exec stat in self.globals,self.locals
+                out.append(self.locals['_out'])
+                i=j+1
+            else:       # normal line, just copy with substitution
+                out.append('%s\n'% self.regex.sub(repl,line))
+                i=i+1
+        return ''.join(out)
 
-Input:
-<h1>Test</h1>
-<?python if a < b: ?>
-    <?python c = b - a #?>
-    a is less than b.<br/>
-    c = <?python= c #?> <br/>
-    <?python for i in range(a, b):?>
-        i = <?python= i #?><br/>
-    <?python # ?>
-<?python # ?>
-<?python else: ?>
-    <?python for i in range(b,a):?>
-        <?python= 'i = %d<br/>' % i #?>
-    <?python # ?>
-<?python # ?>
+    def __init__(self, regex, globals, restat, restend, recont,
+            preproc=identity, handle=nohandle):
+        "Initialize self's attributes"
+        self.regex   = regex
+        self.globals = globals
+        self.locals  = { '_cb':self._parse_block }
+        self.restat  = restat
+        self.restend = restend
+        self.recont  = recont
+        self.preproc = preproc
+        self.handle  = handle            
 
-Output:
-out.write('<h1>Test</h1>')
-if a < b:
-    c = b - a
-    out.write('a is less than b.<br/>\n    c = ')
-    out.write('%s' % c)
-    out.write(' <br/>')
-    for i in range(a, b):
-        out.write('i = ')
-        out.write('%s' % i)
-        out.write('<br/>')
-else:
-    for i in range(b, a):
-        out.write('%s' % 'i = %d<br/>' % i)
-'''
+    def __call__(self, input):
+        self.locals['_bl'] = input
+        return self._parse_block()
 
-__author__="peterb"
-__date__ ="$16.3.2010 13:26:21$"
+    @staticmethod
+    def parse(input, globals, regex=None, restat=None, restend=None, recont=None, recomm=None):
+        if regex==None:
+            regex=re.compile(r"\<\?python\s+=(.+?)#\s*\?\>")
+        if restat==None:
+            restat=re.compile(r"\s*\<\?python\s([^%].+?(#\s*)?)\?\>")
+        if recont==None:
+            recont=re.compile(r"\s*\<\?python\s+%(.+?)(#\s*)?\?\>")
+        if restend==None:
+            restend=re.compile(r"\s*\<\?python\s+#\s*\?\>")
+        if recomm==None:
+            recomm=re.compile(r"\s*\<\?--\s*(.*?)\s*--\?\>")
 
+        parser = Parser(regex, globals, restat, restend, recont)
+        return parser(input)
 
-__all__=('TokenStream',)
-
-class TokenType(object):
-
-    def __init__(self, name, pattern, composite = None):
-        import re
-        self._name = name
-        self._pattern = pattern
-        self._composite = composite
-        self._regex = None
-        
-    def __str__(self):
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
-
-    def __repr__(self):
-        return '<%s.%s> pattern:"%s"' % (self.__class__.__name__, self.name, self.pattern)
-
-    def __get_name(self):
-        ''' TokenType name '''
-        return self._name
-    name = property(__get_name, doc=__get_name.__doc__)
-
-    def __get_pattern(self):
-        ''' Matcher pattern'''
-        return self._pattern
-    pattern = property(__get_pattern, doc=__get_pattern.__doc__)
-
-    def __get_regex(self):
-        ''' Regular expresion created from pattern '''
-        if self._regex == None:
-            if self._pattern is not None:
-                self._regex = re.compile(self._pattern)
-        return self._regex
-    regex = property(__get_regex, doc=__get_regex.__doc__)
-
-    def __get_composite(self):
-        '''  '''
-        return self._composite
-    composite = property(__get_composite, doc=__get_composite.__doc__)
-
-class Token(object):
+def test(input=None, globals={}):
+    "Test: copy a block of lines, with full processing"
     
-    _UNKNOWN = TokenType('unknown', None)
-    
-    def __init__(self, type = _UNKNOWN, value = None):
-        self._type = type
-        self._value = value
+    rex=re.compile(r"<%=\s*([^>]+)\s*/>")
+    rbe=re.compile(r"<%%\s*(.+)\s*>")
+    rco=re.compile(r"<%.\s*(.+)\s*>")
+    ren=re.compile(r"</%%>")
+    cop = Parser(rex, globals, rbe, ren, rco)
+    if input == None:
+        input = """
+A first, plain line -- it just gets copied.
+A second line, with <%=x/> substitutions.
+<%% x+=1   # non-block statements MUST end with comments>
+</%%>
+Now the substitutions are <%=x/>.
+<%% if x>23:>
+After all, <%=x/> is rather large!
+<%. else:>
+After all, <%=x/> is rather small!
+</%%>
+<%% for i in range(3):>
+  Also, <%=i/> times <%=x/> is <%=i*x/>.
+</%%>
+One last, plain line at the end."""
 
-    def __str__(self):
-        return '<%s.%s> value: "%s"' % (self.__class__.__name__, self.type, self.value)
-
-    def __repr__(self):
-        return '<%s.%s> value: "%s"' % (self.__class__.__name__, self.type, self.value)
-
-    def _get_type(self):
-        return self._type
-    type = property(_get_type, doc=_get_type.__doc__)
-
-    def _get_value(self):
-        return self._value
-    value = property(_get_value, doc=_get_value.__doc__)
-
-
-class TokenStream(object):
-    '''
-    TokenStream is a lexer class converting string to stream of Token objects.
-    Lexical analysis is performed by matching patterns given by iterable of TokenType objects.
-    Lexer goes thru string and trying to match given patterns (classes) first match wins and Token object
-    is yielded while 'consuming' match length from input string. Pattern is any regular expression. The
-    length of match is consumed from string, and if exists group(1) is yielded as token.
-    i.e.
-    Having a = TokenType('A', r"(A).*") as pattern returns Token(a, 'A') for all input strings starting with A
-    and not matched by other rules. The matcher is moved to the last matched position (line end or end of string
-    in this case)
-    '''
-
-    def __init__(self, data, lexical_classes):
-        if isinstance(data, str):
-            self._data = ''.join(data)
-        else:
-            self._data = ''.join(['%s\n'%i for i in data])
-        self._pos = 0
-        self._lexical_classes = lexical_classes
-        self._token_stack = []
-
-    def __iter__(self):
-        return self._generator()
-
-    def push_token(self, token):
-        if not isinstance(token, Token):
-            raise TypeError('Argument \'token\' must be instance of \'Token\'.')
-        self._token_stack.append(token)
-
-    def _generator(self):
-        pos = 0
-        while not ((len(self._data) <= 0) or (pos >= len(self._data))):
-            if len(self._token_stack) > 0:
-                yield self._token_stack.pop()
-            matched = False
-            for token_type in self._lexical_classes:
-                if token_type.regex is None:
-                    raise Exception('Given \'TokenType\' cannot be used as matcher.')
-                match = token_type.regex.match(self._data, pos)
-                if match is not None:
-                    matched = True
-                    token_str = match.group(0)
-                    offset = len(token_str)
-                    if len(match.groups()) > 0:
-                        token_str = match.group(1)
-                    break
-            if matched:
-                pos = pos + offset
-                yield Token(token_type, token_str)
-
-
-
-comment = TokenType('<comment>', r"\<\?--\s*(.*?)\s*--\?\>")
-beginsymbol = TokenType('<beginsymb>', r"(\<\?python)(?=[\s=#])")
-endsymbol = TokenType('<endsymb>', r"(\?\>)")
-evaluate = TokenType('<evaluate>', r"(=)")
-enclose = TokenType('<enclose>', r"(#)")
-whitespace = TokenType('<whitespace>', r"([ \t]+)")
-lineend = TokenType('<lineend>', r"(\r\n|[\n\r])")
-string = TokenType('<string>', r"([\"'].*?[\"'])")
-number = TokenType('<number>', r"(\d+)")
-identifier = TokenType('<identifier>', r"(\w([\w\d])*)")
-others = TokenType('<others>', r".")
-
-lexer_classes = (comment, beginsymbol, endsymbol, evaluate, enclose, whitespace, lineend, string, number, identifier, others)
-
-
-def test(data = None):
-    if data is None:
-        data = '''\
-this is test<br/>
-<?python for i in range(1,10): ?> i=<?python=i#?> <?-- this is comment --?>
-    <a href=something
-    \talt="test">
-<?python#          
-?>
-</a> test'''
-    for i in TokenStream(data, lexer_classes): print str(i)
-
-def something():
-    print 'something fd  '
+    lines_block = [line+'\n' for line in input.split('\n')]
+    print "*** input:"
+    print ''.join(lines_block)
+    print "*** output:"
+    cop.copy(lines_block)
