@@ -1,10 +1,12 @@
 __author__="pborky"
 __date__ ="$Mar 8, 2010 10:45:11 PM$"
 
-from pywef.exc import HTTPBadRequest, HTTPInternalServerError, NotInitializedProperly
 import os
 import os.path
-from pywef.logger import get_logger
+#######
+# pywef
+from logger import get_logger
+from exc import HTTPBadRequest, HTTPInternalServerError, NotInitializedProperly
 
 log = get_logger('pywef.action')
 
