@@ -403,11 +403,11 @@ class HTTPException(Exception):
     def __init__(self, detail=None, exc_info=False, headerlist=None, comment=None, **kargs):
 
         if exc_info:
-            if not isinstance(exc_info, wrap_exc.ExcInfoWrapper):
+            if not isinstance(exc_info, ExcInfoWrapper):
                 if not isinstance(exc_info, bool):
-                    exc_info = wrap_exc.ExcInfoWrapper(exc_info)
+                    exc_info = ExcInfoWrapper(exc_info)
                 else:
-                    exc_info = wrap_exc.ExcInfoWrapper()
+                    exc_info = ExcInfoWrapper()
             Exception.__init__(self, detail, exc_info, **kargs)
         else:
             #TODO:check kargs for ExcInfoWrapper instance

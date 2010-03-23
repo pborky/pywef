@@ -2,36 +2,21 @@ __author__="pborky"
 __date__ ="$19.2.2010 0:21:07$"
 
 from pywef import FrontController, ActionController
-from pywef.demo.testaction import TestAction
+from pywef.demo import ACTIONS, TEMPLATES, TEMPLATES_DIR, LOGS, LOGS_DIR, BASE_DIR, MONITOR, EXC_WRAPPER
 from genshi.template import MarkupTemplate
 
 SERVER_SETUP = {
     'debug': True,
-
-    'loggers': {
-        'pywef':{
-            'file': {
-                'name':'/tmp/pywef/log/pywef_app.log',
-                'size':5000000,
-                'count':5 } } },
-
-    'monitor': {
-        'force_restart': True,
-        'track_files': ( '/tmp/test', '/home/pborky/Projects/python/pywef/src/templates') },
-
-    'exc_wrapper': {
-        'call': True,
-        'init': True },
-
+    'loggers': LOGS,
+    'monitor': MONITOR,
+    'exc_wrapper': EXC_WRAPPER,
     'controllers': {
         'index': {
             'ctrl': ActionController,
             'ctrl_vars': {
-                'actions': {
-                    'test': (TestAction, 'test_template') },
-                'templates_dir': '/home/pborky/Projects/python/pywef/src/templates',
-                'templates': {
-                    'test_template': 'testview.xml' },
+                'actions': ACTIONS,
+                'templates_dir': TEMPLATES_DIR,
+                'templates': TEMPLATES,
                 'parser_cls': MarkupTemplate } ,
             'route': '/',
             'route_vars': {
@@ -42,11 +27,9 @@ SERVER_SETUP = {
         'main': {
             'ctrl': ActionController,
             'ctrl_vars': {
-                'actions': {
-                    'test': (TestAction, 'test_template') },
-                'templates_dir': '/home/pborky/Projects/python/pywef/src/templates',
-                'templates': {
-                    'test_template': 'testview.xml' },
+                'actions': ACTIONS,
+                'templates_dir': TEMPLATES_DIR,
+                'templates': TEMPLATES,
                 'parser_cls': MarkupTemplate } ,
             'route': '/do/test/{data}',
             'route_vars': {
